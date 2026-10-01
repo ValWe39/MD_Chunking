@@ -9,7 +9,7 @@ Removed sections: N/A
 Follow-up TODOs: None
 -->
 
-# MD Cleaner Constitution
+# MD Chunking Constitution
 
 ## Core Principles
 
