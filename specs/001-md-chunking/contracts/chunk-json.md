@@ -43,7 +43,7 @@ chunk) est satisfaite par la paire `document.path` + `chunks[].ref`.
 ## Règles de champs
 
 | Champ | Présence | Règle |
-|-------|----------|-------|
+| ------- | ---------- | ------- |
 | schema_version | obligatoire | "1.0", versionnée (FR-013) |
 | document.path | obligatoire | chemin du document (FR-007) |
 | document.title | si balisé | jamais deviné (FR-007) |

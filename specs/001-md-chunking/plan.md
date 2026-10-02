@@ -62,7 +62,7 @@ relatif ou via arguments (path isolation).
 design.*
 
 | Principe | Statut | Détail |
-|----------|--------|--------|
+| ---------- | -------- | -------- |
 | I. Secrets | PASS | aucun identifiant, aucun réseau |
 | II. Local-first | PASS | fichiers locaux, hors ligne total |
 | III. Sans trackers | PASS* | haystack-ai Apache-2.0 ; voir note |

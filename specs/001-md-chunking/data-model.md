@@ -13,7 +13,7 @@ sortie.
 Représente un fichier Markdown en entrée, après normalisation.
 
 | Champ | Type | Règle |
-|-------|------|-------|
+| ------- | ------ | ------- |
 | path | str | obligatoire, fourni par l'utilisateur |
 | raw_content | str | contenu original lu, décodé UTF-8 |
 | normalized_content | str | fins LF, titres neutralisés (FR-010) |
@@ -31,7 +31,7 @@ lot continue (edge case spec).
 Unité de texte découpée.
 
 | Champ | Type | Règle |
-|-------|------|-------|
+| ------- | ------ | ------- |
 | ref | str | référence unique séquentielle (FR-007) |
 | text | str | contenu du chunk, jamais vide |
 | length | int | `len(text)` en caractères (FR-002) |
@@ -69,7 +69,7 @@ ajoutée à la suite de l'analyse des Exemples 3/4 (prose longue),
 Artefacts produits par document.
 
 | Champ | Type | Règle |
-|-------|------|-------|
+| ------- | ------ | ------- |
 | subdir | str | numéroté (`0001`) ou slug titre 30 car. (FR-009) |
 | chunks_file | fichier | `<subdir>/chunks.json` (contrat chunk-json) |
 | review_file | fichier | `<subdir>/review.md` (FR-008) |

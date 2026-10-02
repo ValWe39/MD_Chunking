@@ -18,7 +18,7 @@ fichier = un document (assumption spec).
 ## Options
 
 | Option | Type | Défaut | Règle (FR) |
-|--------|------|--------|------------|
+| -------- | ------ | -------- | ------------ |
 | --min | int > 0 | selon preset | taille min, caractères (FR-002) |
 | --max | int | selon preset | taille max ; > --min (FR-012) |
 | --overlap | int 0–20 | 15 | % du chunk (FR-005) |
@@ -36,7 +36,7 @@ surchargent le preset (US-4).
 ## Codes de sortie
 
 | Code | Signification |
-|------|---------------|
+| ------ | --------------- |
 | 0 | succès — tous les documents traités |
 | 2 | config invalide — rien n'est écrit (FR-012) |
 | 1 | un document échoue ; le lot continue (spec) |
