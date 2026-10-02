@@ -31,12 +31,15 @@ repos:
     rev: v0.15.0
     hooks:
       - id: markdownlint-cli2
+        exclude: ^tests/fixtures/
         args: [
           '**/*.md',
           '!**/.github/workflows/**',
           '!**/.specify/**',
+          '!**/.venv/**',
           '**/.specify/memory/**',
           '!**/Examples/**',
+          '!**/tests/fixtures/**',
           '!**/input/**',
           '!**/output/**',
           '!**/Prompts/**',
