@@ -36,6 +36,7 @@ repos:
           '!**/.github/workflows/**',
           '!**/.specify/**',
           '**/.specify/memory/**',
+          '!**/Examples/**',
           '!**/input/**',
           '!**/output/**',
           '!**/Prompts/**',

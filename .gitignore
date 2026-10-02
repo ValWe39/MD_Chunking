@@ -9,8 +9,10 @@ output/
 # Dossiers à ignorer
 Prompts/
 .vibe/
+Examples/
+__pycache__/
 
-# Ignorer les sous-dossiers de .specify sauf memory/
-.specify/.vibe/
-.specify/templates/
+# Ignorer .specify/ sauf assessments/ et memory/
+.specify/*
+!.specify/assessments/
 !.specify/memory/
