@@ -29,22 +29,22 @@ racine du dépôt (cf. plan.md, Structure Decision).
 
 **Purpose**: initialisation du projet et structure de base
 
-- [ ] T001 Créer la structure du projet selon plan.md : package
+- [x] T001 Créer la structure du projet selon plan.md : package
       md_chunking/ (vide, avec `__init__.py`) et dossiers
       tests/unit, tests/integration, tests/fixtures
-- [ ] T002 Initialiser le projet Python dans pyproject.toml :
+- [x] T002 Initialiser le projet Python dans pyproject.toml :
       dépendances haystack-ai épinglé en 2.x stable et markdown-it-py
       ( licences Apache-2.0 et MIT), point d'entrée
       `md_chunking = md_chunking.cli:main`
-- [ ] T003 [P] Configurer pytest dans pyproject.toml (section
+- [x] T003 [P] Configurer pytest dans pyproject.toml (section
       [tool.pytest.ini_options], dossier tests/)
-- [ ] T004 [P] Créer les mini-fixtures committées dans
+- [x] T004 [P] Créer les mini-fixtures committées dans
       tests/fixtures/ (décision D7 de research.md) :
       article-propre.md (sections régulières, CRLF),
       titres-en-listes.md (motif `* ## [`, CRLF),
       prose-longue.md (LF, sections > 700 mots),
       sans-structure.md (prose sans titres)
-- [ ] T005 Vérifier l'absence de télémétrie dans haystack-ai au
+- [x] T005 Vérifier l'absence de télémétrie dans haystack-ai au
       premier build (décision D3 de research.md) et consigner le
       résultat dans README.md ; le cas échéant, documenter la
       variable de désactivation dans README.md
@@ -58,23 +58,23 @@ racine du dépôt (cf. plan.md, Structure Decision).
 **CRITICAL**: aucune user story ne peut commencer avant la fin de
 cette phase
 
-- [ ] T006 Créer les entités DocumentSource et Chunk dans
+- [x] T006 Créer les entités DocumentSource et Chunk dans
       md_chunking/models.py conformément à data-model.md, avec les
       contraintes verbatim : `length = len(text)` en caractères,
       `ref` séquentiel unique, `text` jamais vide, `atomic` bool
       (écart de fourchette signalé)
-- [ ] T007 Implémenter la validation de configuration dans
+- [x] T007 Implémenter la validation de configuration dans
       md_chunking/cli.py (FR-012) : --min < --max, --overlap dans
       0–20, --typologie parmi les 5, --naming parmi
       numbered/title, chemin d'entrée présent ; échec rapide avec
       code de sortie 2 et message clair, aucun fichier écrit
-- [ ] T008 Implémenter la normalisation des entrées dans
+- [x] T008 Implémenter la normalisation des entrées dans
       md_chunking/normalizer.py (FR-010, décision D5) : fins de
       ligne CRLF/LF unifiées en LF, neutralisation des titres
       emboîtés dans des puces (motif `* ## [` d'Exemple1) sans
       perte de contenu, détection du titre (H1 ou front-matter
       YAML, sinon champ absent)
-- [ ] T009 Implémenter les presets dans md_chunking/presets.py
+- [x] T009 Implémenter les presets dans md_chunking/presets.py
       avec les valeurs exactes de data-model.md : documentation
       min 100 max 1000 overlap 15 (défaut), articles 150/1500/13,
       conversations 50/500/10, code 200/2000/15, livre 150/1200/15
@@ -95,36 +95,36 @@ caractères et qu'aucune frontière n'est coupée sans nécessité
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] Tests unitaires de normalisation dans
+- [x] T010 [P] [US1] Tests unitaires de normalisation dans
       tests/unit/test_normalizer.py : CRLF→LF, neutralisation des
       titres en listes sur tests/fixtures/titres-en-listes.md,
       détection de titre
-- [ ] T011 [P] [US1] Tests d'intégration de découpage dans
+- [x] T011 [P] [US1] Tests d'intégration de découpage dans
       tests/integration/test_split.py : bornes respectées sur les
       4 fixtures, bascule de niveaux sur prose-longue.md et
       sans-structure.md, blocs code/tableaux atomiques
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implémenter le découpage par sections dans
+- [x] T012 [US1] Implémenter le découpage par sections dans
       md_chunking/splitter.py : MarkdownToDocument puis
       MarkdownHeaderSplitter (hiérarchie préservée en métadonnées,
       décision D1), construction des Chunk
-- [ ] T013 [US1] Implémenter la bascule de niveaux dans
+- [x] T013 [US1] Implémenter la bascule de niveaux dans
       md_chunking/splitter.py (FR-003) : sections → paragraphes →
       phrases en dernier recours ; entités atomiques (blocs
       code/tableaux) jamais coupées, écart signalé via atomic
-- [ ] T014 [US1] Implémenter l'heuristique gloutonne d'occupation
+- [x] T014 [US1] Implémenter l'heuristique gloutonne d'occupation
       maximale dans md_chunking/splitter.py (FR-004) : fusion des
       unités voisines tant que chunk_max n'est pas atteint et que
       les frontières tiennent ; jamais sous chunk_min sauf section
       entière plus courte (edge case spec)
-- [ ] T015 [US1] Implémenter l'overlap structurel dans
+- [x] T015 [US1] Implémenter l'overlap structurel dans
       md_chunking/overlap.py (FR-005, décision D6) : 0–20% du
       chunk découpé aux mêmes frontières, filtrage des fenêtres
       entièrement couvertes (contournement du bug Haystack
       référencé #12686, décision D2)
-- [ ] T016 [US1] Câbler le traitement de fichiers dans
+- [x] T016 [US1] Câbler le traitement de fichiers dans
       md_chunking/cli.py : lecture UTF-8, pipeline
       normalise→découpe→overlap, échec d'un document sans arrêter
       le lot (code 1, message nommant le fichier)
@@ -145,19 +145,19 @@ champs du contrat, y compris l'absence des champs non balisés
 
 ### Tests for User Story 2
 
-- [ ] T017 [P] [US2] Tests unitaires de l'indexeur dans
+- [x] T017 [P] [US2] Tests unitaires de l'indexeur dans
       tests/unit/test_indexer.py : schéma complet, ref séquentiels
       uniques, champs conditionnels présents si et seulement si
       balisés, params reflétant la configuration effective
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Implémenter l'export JSON dans
+- [x] T018 [US2] Implémenter l'export JSON dans
       md_chunking/indexer.py selon contracts/chunk-json.md :
       schema_version, document (path/title/structure/typologie),
       params (unit chars), chunks[] avec ref/text/length/boundary/
       part/page/position_in_part/atomic
-- [ ] T019 [US2] Brancher l'écriture de chunks.json dans
+- [x] T019 [US2] Brancher l'écriture de chunks.json dans
       md_chunking/cli.py : un fichier JSON par document traité,
       valeurs de sortie non horodatées (déterminisme SC-005)
 
@@ -176,17 +176,17 @@ outil supplémentaire
 
 ### Tests for User Story 3
 
-- [ ] T020 [P] [US3] Tests unitaires du rendu dans
+- [x] T020 [P] [US3] Tests unitaires du rendu dans
       tests/unit/test_reviewer.py : un titre par chunk, métadonnées
       en liste, texte intégral, option --no-review respectée
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Implémenter le rendu de relecture dans
+- [x] T021 [US3] Implémenter le rendu de relecture dans
       md_chunking/reviewer.py : `## Chunk N — [partie] — X car.`,
       métadonnées du chunk en liste, texte intégral dans un bloc ;
       déterminisme (aucun horodatage)
-- [ ] T022 [US3] Brancher --no-review dans md_chunking/cli.py et
+- [x] T022 [US3] Brancher --no-review dans md_chunking/cli.py et
       vérifier le scénario SC-004 sur le corpus Examples/ (moins
       de 10 minutes de relecture pour environ 50 chunks)
 
@@ -205,18 +205,18 @@ un sous-dossier créé par document
 
 ### Tests for User Story 4
 
-- [ ] T023 [P] [US4] Tests unitaires des presets dans
+- [x] T023 [P] [US4] Tests unitaires des presets dans
       tests/unit/test_presets.py : valeurs exactes de T009
       citées verbatim, surcharge par --min/--max/--overlap
 
 ### Implementation for User Story 4
 
-- [ ] T024 [US4] Implémenter l'organisation des sorties dans
+- [x] T024 [US4] Implémenter l'organisation des sorties dans
       md_chunking/cli.py : sous-dossier numéroté `0001` par défaut
       ou slug du titre limité à 30 caractères si --naming title
       et titre disponible, repli sur la numérotation sinon,
       création du dossier --output (défaut relatif output/)
-- [ ] T025 [US4] Brancher --typologie dans md_chunking/cli.py :
+- [x] T025 [US4] Brancher --typologie dans md_chunking/cli.py :
       preset appliqué par défaut, surcharge par options explicites
       (US4, scénario 3 de la spec)
 
@@ -228,17 +228,17 @@ un sous-dossier créé par document
 
 **Purpose**: améliorations touchant plusieurs stories
 
-- [ ] T026 [P] Documenter l'installation et l'usage dans README.md
+- [x] T026 [P] Documenter l'installation et l'usage dans README.md
       (prérequis, exemples de commandes, résultat attendu,
       conclusion de la vérification de télémétrie de T005)
-- [ ] T027 Valider le déterminisme (SC-005) : deux exécutions
+- [x] T027 Valider le déterminisme (SC-005) : deux exécutions
       identiques sur tests/fixtures/article-propre.md, diff des
       sorties sans différence
-- [ ] T028 Exécuter les scénarios 1 à 7 de quickstart.md sur le
+- [x] T028 Exécuter les scénarios 1 à 7 de quickstart.md sur le
       corpus Examples/ et consigner les résultats
-- [ ] T029 [P] Vérification de performance (plan.md) : les 4
+- [x] T029 [P] Vérification de performance (plan.md) : les 4
       documents de Examples/ traités en quelques secondes au total
-- [ ] T030 Nettoyage final : suppression des TODO résiduels,
+- [x] T030 Nettoyage final : suppression des TODO résiduels,
       passage complet de pytest, revue des messages d'erreur en
       français
 

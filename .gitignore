@@ -11,6 +11,11 @@ Prompts/
 .vibe/
 Examples/
 __pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+*.egg-info/
 
 # Ignorer .specify/ sauf assessments/ et memory/
 .specify/*

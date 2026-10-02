@@ -98,7 +98,7 @@ jobs:
       - name: Installer markdownlint-cli2 (autorisé par Amendement 2)
         run: npm install -g markdownlint-cli2
 
-      - name: Lint Markdown (exclusions input output Prompts .vibe .github/workflows Licence)
+      - name: Lint Markdown (exclusions input output Prompts .vibe .github/workflows Licence fixtures)
         run: |
           markdownlint-cli2 '**/*.md' \
             '!input/**' \
@@ -106,6 +106,7 @@ jobs:
             '!Prompts/**' \
             '!.vibe/**' \
             '!.github/workflows/**' \
+            '!tests/fixtures/**' \
             '!Licence'
 
   # --- Job 4 : Audit de sécurité des workflows ---
