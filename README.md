@@ -2,6 +2,43 @@
 
 Un outil de chunking de texte sous format Markdown 100 % local et déterministe.
 
+## Pour débutants (mode d'emploi rapide)
+
+Pas à pas, pour découper un document sans rien connaître à Python :
+
+1. Ouvre PowerShell dans le dossier du projet : le prompt doit
+   afficher `...\GitHub_Projects\MD_Chunking>`.
+2. Saisis l'unique commande d'utilisation. L'outil est rangé dans le
+   coffre `.venv` du projet ; le préfixe est simplement son adresse :
+
+   ```powershell
+   .venv\Scripts\md_chunking.exe "Examples\Exemple1\nettoye.md"
+   ```
+
+3. L'outil répond une ligne du genre
+   `Examples\Exemple1\nettoye.md : 117 chunks -> output\0001` :
+   le nombre de morceaux (chunks) et le dossier de rangement.
+4. Ouvre le dossier `output\0001` : `chunks.json` est la fiche
+   technique de chaque chunk (à envoyer à l'embedding) ; `review.md`
+   présente le même découpage pour lecture à l'œil nu.
+5. Pour régler la découpe, ajoute des options entre l'outil et le
+   document :
+
+   ```powershell
+   .venv\Scripts\md_chunking.exe --typologie livre "mon-document.md"
+   ```
+
+Pas d'activation de venv nécessaire avec cette forme. Si tu préfères
+la commande nue `md_chunking` directement après le prompt, deux
+options :
+
+- activer le venv en début de session :
+  `.\.venv\Scripts\Activate.ps1` (si PowerShell le refuse, voir la
+  politique d'exécution `about_Execution_Policies`, ou passe la
+  commande `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`) ;
+- ou installer l'outil dans ton Python global, une seule fois :
+  `pip install -e .` (haystack vivra alors dans ton Python Windows).
+
 ## Installation
 
 Prérequis : Python 3.11 ou plus récent.
