@@ -120,3 +120,15 @@ def test_determinisme_deux_executions_identiques(tmp_path):
     json_a = (sortie_a / "0001" / "chunks.json").read_text(encoding="utf-8")
     json_b = (sortie_b / "0001" / "chunks.json").read_text(encoding="utf-8")
     assert json_a == json_b
+
+
+def test_review_porte_l_estimation_index_sans_tokens(tmp_path):
+    """FR-T01, FR-T07 (feature 002) : estimation marquee approximative
+    dans review.md ; aucun champ tokens dans l'index JSON."""
+    sortie = tmp_path / "out"
+    assert main([str(PROPRE), "--output", str(sortie)]) == 0
+    sous_dossier = next(sortie.iterdir())
+    review = (sous_dossier / "review.md").read_text(encoding="utf-8")
+    assert "- tokens (estimation) : ≈ " in review
+    index = json.loads((sous_dossier / "chunks.json").read_text(encoding="utf-8"))
+    assert "tokens" not in json.dumps(index)

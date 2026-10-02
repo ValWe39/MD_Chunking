@@ -20,7 +20,10 @@ Pas à pas, pour découper un document sans rien connaître à Python :
    le nombre de morceaux (chunks) et le dossier de rangement.
 4. Ouvre le dossier `output\0001` : `chunks.json` est la fiche
    technique de chaque chunk (à envoyer à l'embedding) ; `review.md`
-   présente le même découpage pour lecture à l'œil nu.
+   présente le même découpage pour lecture à l'œil nu. Chaque chunk
+   y affiche aussi une estimation approximative de son nombre de
+   tokens (« ≈ N », ~4 caractères par token, indépendante de tout
+   modèle d'embedding).
 5. Pour régler la découpe, ajoute des options entre l'outil et le
    document :
 
@@ -71,7 +74,10 @@ Chaque document traité produit un sous-dossier dedie contenant :
 
 - `chunks.json` : index de tracabilite (schema
   `specs/001-md-chunking/contracts/chunk-json.md`) ;
-- `review.md` : rendu annote pour relecture humaine avant embedding.
+- `review.md` : rendu annote pour relecture humaine avant
+  embedding ; chaque chunk porte une estimation approximative de
+  ses tokens (`≈ N`, ~4 caractères par token, modele-agnostique,
+  cf. `specs/002-compteur-tokens-chunks/contracts/review-render.md`).
 
 Codes de sortie : 0 succes, 1 au moins un document en echec (le lot
 continue), 2 configuration invalide (rien n'est ecrit).
