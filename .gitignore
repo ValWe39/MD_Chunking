@@ -10,6 +10,7 @@ output/
 Prompts/
 .vibe/
 Examples/
+__pycache__/
 
 # Ignorer .specify/ sauf assessments/ et memory/
 .specify/*
