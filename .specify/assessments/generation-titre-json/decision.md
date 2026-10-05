@@ -8,7 +8,7 @@
 ## Scorecard
 
 | Critère | Note |
-|---------|------|
+| ------- | ---- |
 | Problem validity | strong |
 | Evidence strength | adequate |
 | Value vs. inaction | strong |
