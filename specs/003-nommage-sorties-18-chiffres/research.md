@@ -104,7 +104,7 @@ spécification. Chaque décision cite ses alternatives écartées.
 ## D6 — Stratégie de test
 
 - **Decision**: trois volets. (1) `tests/unit/test_naming.py` :
-  aller-retour encodage/décodage, bornes (zzzzz, wxyz), padding
+  aller-retour encodage/décodage, bornes (zzzzz, zzzz), padding
   (abc → 00000731), casse (CONTEXTE = contexte), accents
   (DÉMOCRATIE = DEMOCRATIE), blocs vides, noms courts, plus de 5
   lettres. (2) `tests/unit/test_counter.py` : fichier absent → 0001,

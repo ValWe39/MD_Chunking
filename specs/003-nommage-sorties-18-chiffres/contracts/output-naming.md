@@ -42,8 +42,8 @@ feature 001, review-render.md de la feature 002) — inchangés.
 - Lettres retenues : 4 premières, mêmes règles de normalisation que
   le bloc fichier.
 - Titre absent ou sans lettre → `000000` (FR-004).
-- Bornes : 4 lettres max → 475 254 (`wxyz`), toujours 6 chiffres ou
-  moins.
+- Bornes : 4 lettres max →
+  475 254 (`zzzz`), toujours 6 chiffres ou moins.
 
 ## Bloc occurrence (4 chiffres)
 

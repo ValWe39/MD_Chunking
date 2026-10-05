@@ -29,7 +29,7 @@ implémentable et testable indépendamment.
 
 **Purpose**: préparer le dépôt à accueillir l'état local du compteur
 
-- [ ] T001 Ajouter l'entrée `counter.txt` au fichier `.gitignore`
+- [x] T001 Ajouter l'entrée `counter.txt` au fichier `.gitignore`
   racine (FR-014, research.md D1) — le fichier d'état ne doit jamais
   être commité
 
@@ -43,14 +43,14 @@ dépendent ; aucune story ne peut commencer avant
 **CRITICAL**: aucune user story ne peut commencer avant la fin de
 cette phase
 
-- [ ] T002 [P] Créer le module `md_chunking/naming.py` : extraction des
+- [x] T002 [P] Créer le module `md_chunking/naming.py` : extraction des
   lettres (NFKD, marques combinantes retirées, hors `a`–`z` ignoré,
   casse neutre — research.md D2), encodage et décodage bijectif base 26
   (A=1 … Z=26, FR-003), construction du nom
   `build_output_name(stem, title, occurrence)` en blocs 8/6/4 zéro-
   paddés à gauche (FR-002, FR-004 ; bornes : 5 lettres ≤ 12 356 630,
   4 lettres ≤ 475 254, bloc vide = `00000000`/`000000`)
-- [ ] T003 [P] Créer le module `md_chunking/counter.py` :
+- [x] T003 [P] Créer le module `md_chunking/counter.py` :
   `COUNTER_PATH` résolu en `Path(__file__).resolve().parent.parent /
   "counter.txt"` (research.md D1), lecture au démarrage (absent →
   0001 ; contenu « NNNN\n » hors 0–9999 → erreur — FR-009),
@@ -78,7 +78,7 @@ sous-dossier ; `--naming title` échoue (code 2)
 > **NOTE**: écrire ces tests AVANT l'implémentation, vérifier leur
 > ÉCHEC d'abord
 
-- [ ] T004 [US1] Adapter `tests/integration/test_cli.py` : remplacer
+- [x] T004 [US1] Adapter `tests/integration/test_cli.py` : remplacer
   les 7 assertions verrouillant `output/NNNN/chunks.json` par la
   sortie plate, ajouter les tests « deux fichiers par document, aucun
   sous-dossier » (FR-001), « trois documents → six noms tous
@@ -87,11 +87,11 @@ sous-dossier ; `--naming title` échoue (code 2)
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Supprimer dans `md_chunking/cli.py` l'option
+- [x] T005 [US1] Supprimer dans `md_chunking/cli.py` l'option
   `--naming` et les fonctions `_slugify`, `TITLE_SLUG_MAX`,
   `_subdir_name`, `_resolve_subdir` (FR-012, research.md D5) ;
   vérifier qu'aucun appel résiduel ne subsiste
-- [ ] T006 [US1] Câbler le nommage dans `md_chunking/cli.py`
+- [x] T006 [US1] Câbler le nommage dans `md_chunking/cli.py`
   (`main`, `process_document`) : lecture du compteur au démarrage —
   illisible → erreur de configuration, code 2, aucun fichier écrit
   (FR-009) ; par document produit, construction du nom 18 chiffres
@@ -115,8 +115,8 @@ corpus réel (« CONTEXTE », « À LA DÉMOCRATIE »)
 
 ### Tests for User Story 2
 
-- [ ] T007 [P] [US2] Créer `tests/unit/test_naming.py` : aller-retour
-  encodage/décodage (FR-003), bornes (`zzzzz` → 12356630, `wxyz` →
+- [x] T007 [P] [US2] Créer `tests/unit/test_naming.py` : aller-retour
+  encodage/décodage (FR-003), bornes (`zzzzz` → 12356630, `zzzz` →
   475254), padding gauche (`abc` → `00000731`, FR-004), casse
   (« CONTEXTE » = « contexte », FR-005), accents (« DÉMOCRATIE » =
   « DEMOCRATIE », FR-011), blocs vides (`00000000`, `000000`),
@@ -124,7 +124,7 @@ corpus réel (« CONTEXTE », « À LA DÉMOCRATIE »)
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Corriger `md_chunking/naming.py` sur tout écart
+- [x] T008 [US2] Corriger `md_chunking/naming.py` sur tout écart
   révélé par T007 ; la conformité au contrat
   `specs/003-nommage-sorties-18-chiffres/contracts/output-naming.md`
   fait foi (FR-003, FR-004, FR-005, FR-011)
@@ -144,20 +144,20 @@ sans écriture
 
 ### Tests for User Story 3
 
-- [ ] T009 [P] [US3] Créer `tests/unit/test_counter.py` en isolation
+- [x] T009 [P] [US3] Créer `tests/unit/test_counter.py` en isolation
   `tmp_path` (jamais le `counter.txt` réel du dépôt — research.md D6) :
   fichier absent → 0001 (FR-009), contenu non numérique ou hors
   0–9999 → erreur (FR-009), cycle 9999 → 0000 (FR-008), persistance
   après chaque document (FR-007), aucun fichier temporaire résiduel
   après `os.replace` (research.md D4)
-- [ ] T010 [P] [US3] Ajouter dans `tests/integration/test_cli.py` :
+- [x] T010 [P] [US3] Ajouter dans `tests/integration/test_cli.py` :
   deux exécutions successives → numéros d'occurrence strictement
   croissants (SC-005) et contenu du JSON identique octet par octet
   entre exécutions du même document (SC-003)
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Corriger `md_chunking/counter.py` sur tout écart
+- [x] T011 [US3] Corriger `md_chunking/counter.py` sur tout écart
   révélé par T009/T010 ; vérifier que la persistance a bien lieu après
   chaque document (un numéro consommé n'est jamais réutilisé,
   FR-007)
@@ -171,14 +171,14 @@ indépendamment
 
 **Purpose**: documentation et validation transverses
 
-- [ ] T012 [P] Mettre à jour `README.md` : nommage 18 chiffres,
+- [x] T012 [P] Mettre à jour `README.md` : nommage 18 chiffres,
   format décodable (référence au contrat), `counter.txt` et sa
   régénération, disparition des sous-dossiers et de `--naming`
-- [ ] T013 Exécuter les 6 scénarios de
+- [x] T013 Exécuter les 6 scénarios de
   `specs/003-nommage-sorties-18-chiffres/quickstart.md` sur le corpus
   réel (`Examples/`), puis la suite complète `python -m pytest` :
   tout doit être vert (SC-001, SC-002, SC-004)
-- [ ] T014 Vérifier `git check-ignore counter.txt` (T001 effectif),
+- [x] T014 Vérifier `git check-ignore counter.txt` (T001 effectif),
   puis marquer les tâches accomplies dans ce fichier
 
 ---
