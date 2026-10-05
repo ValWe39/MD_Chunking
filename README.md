@@ -34,6 +34,19 @@ Pas à pas, pour découper un document sans rien connaître à Python :
    .venv\Scripts\md_chunking.exe --typologie livre "mon-document.md"
    ```
 
+6. Pour découper tous les documents Markdown d'un dossier d'un coup,
+   passe le dossier au lieu du fichier :
+
+   ```powershell
+   .venv\Scripts\md_chunking.exe "Mes documents"
+   ```
+
+   Seuls les fichiers `.md` sont traités (casse indifférente), dans
+   l'ordre alphabétique des noms ; les sous-dossiers ne sont pas
+   parcourus. Un dossier vide ou sans `.md` s'achève sans rien
+   écrire, avec un avertissement. Tu peux mélanger dossiers et
+   fichiers dans la même commande.
+
 Pas d'activation de venv nécessaire avec cette forme. Si tu préfères
 la commande nue `md_chunking` directement après le prompt, deux
 options :
@@ -58,8 +71,17 @@ python -m venv .venv
 ## Usage
 
 ```bash
-python -m md_chunking [OPTIONS] FICHIER [FICHIER ...]
+python -m md_chunking [OPTIONS] ENTREE [ENTREE ...]
 ```
+
+`ENTREE` : un ou plusieurs chemins, chacun étant un fichier Markdown
+ou un dossier (feature 005). Un dossier est traité comme si tous ses
+fichiers `.md` de surface — casse indifférente, sous-dossiers
+exclus — y étaient passés un par un, triés alphabétiquement ;
+un dossier vide ou sans `.md` réussit sans rien écrire ; il n'y a
+ni récursivité ni motif joker, et les doublons sont traités à chaque
+occurrence (contrat :
+`specs/005-dossier-entree-cli/contracts/cli.md`).
 
 Options principales (contrat :
 `specs/001-md-chunking/contracts/cli.md`, évolutions feature 003 :

@@ -84,6 +84,9 @@ def test_min_negatif_refuse():
         parse_args([FIXTURE, "--min", "-5"])
 
 
-def test_fichier_introuvable_refuse():
-    with pytest.raises(ConfigError, match="introuvable"):
-        parse_args(["inexistant.md"])
+def test_fichier_introuvable_valide_par_la_resolution():
+    """Feature 005 : parse_args ne valide plus l'existence des
+    entrees ; c'est resolve_inputs qui tranche (InputError,
+    couvert par tests/unit/test_inputs.py et l'integration)."""
+    args = parse_args(["inexistant.md"])
+    assert [str(p) for p in args.fichiers] == ["inexistant.md"]

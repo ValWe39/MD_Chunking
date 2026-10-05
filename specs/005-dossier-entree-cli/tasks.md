@@ -31,7 +31,7 @@ du dépôt (structure du plan.md).
 
 **Purpose**: s'assurer de partir d'une base verte avant tout.
 
-- [ ] T001 Vérifier la baseline : `.venv/Scripts/python -m pytest`
+- [x] T001 Vérifier la baseline : `.venv/Scripts/python -m pytest`
       passe sur la suite existante (70+ tests verts attendus)
 
 ---
@@ -41,7 +41,7 @@ du dépôt (structure du plan.md).
 **Purpose**: le socle de résolution d'entrée, utilisé par toutes les
 stories. Aucune story ne peut commencer avant la fin de cette phase.
 
-- [ ] T002 [P] Créer `md_chunking/inputs.py` : exception
+- [x] T002 [P] Créer `md_chunking/inputs.py` : exception
       `InputError` et fonction pure `resolve_inputs(chemins) ->
       (fichiers, avertissements)` selon research.md D1-D7 : filtre
       `suffix.lower() == ".md"` (insensible à la casse, FR-002),
@@ -53,16 +53,16 @@ stories. Aucune story ne peut commencer avant la fin de cette phase.
       .md : {dossier} » par dossier vide ou sans `.md` (FR-005b),
       `InputError` « fichier d'entree introuvable : {chemin} » pour
       introuvable ou ni-fichier-ni-dossier (FR-005)
-- [ ] T003 [P] Créer `tests/unit/test_inputs.py` : tests unitaires
+- [x] T003 [P] Créer `tests/unit/test_inputs.py` : tests unitaires
       de `resolve_inputs` en `tmp_path` — dossier de 3 `.md` triés
-      casse neutre (`B.md` < `c.md` < `a2.md` ordre stable), `.MD`
+      casse neutre (`a2.md` < `B.md` < `c.md` ordre stable), `.MD`
       accepté, `.markdown`/`.txt`/sans extension ignorés,
       sous-dossier ignoré, avertissements pour dossier vide et
       dossier sans `.md`, `InputError` pour chemin introuvable et
       pour un chemin ni fichier ni dossier, doublon conservé
       (dossier + fichier identique -> 2 occurrences), ordre des
       arguments préservé (fichier avant dossier et inversement)
-- [ ] T004 Câbler `md_chunking/cli.py` : remplacer la boucle de
+- [x] T004 Câbler `md_chunking/cli.py` : remplacer la boucle de
       validation `is_file()` par l'appel à `resolve_inputs`, traduire
       `InputError` en `ConfigError` (code 2, message existant),
       résoudre AVANT `read_counter()` (D4 : zéro document ->
@@ -87,19 +87,19 @@ alphabétique.
 
 ### Tests for User Story 1
 
-- [ ] T005 [P] [US1] Étendre `tests/integration/test_cli.py` :
+- [x] T005 [P] [US1] Étendre `tests/integration/test_cli.py` :
       test d'intégration « dossier complet » — dossier de 3 `.md`
       (mini-fixtures de `tests/fixtures/` copiées en `tmp_path`)
       -> code 0, 6 sorties à plat (3 JSON + 3 reviews), compteur
       avancé de 3, un `.txt` ajouté ignoré (SC-001)
-- [ ] T006 [P] [US1] Étendre `tests/integration/test_cli.py` :
+- [x] T006 [P] [US1] Étendre `tests/integration/test_cli.py` :
       test de reproductibilité — même dossier, compteur réinitialisé,
       deux exécutions -> numéros d'occurrence attribués dans le
       même ordre alphabétique (SC-002, FR-003)
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Corriger tout échec des tests T005/T006 dans
+- [x] T007 [US1] Corriger tout échec des tests T005/T006 dans
       `md_chunking/inputs.py` et `md_chunking/cli.py` (les
       comportements proviennent de la Phase 2 ; ce task est la
       boucle de durcissement US1)
@@ -120,19 +120,19 @@ arguments inverse l'ordre.
 
 ### Tests for User Story 2
 
-- [ ] T008 [P] [US2] Étendre `tests/integration/test_cli.py` :
+- [x] T008 [P] [US2] Étendre `tests/integration/test_cli.py` :
       test « mélange » — dossier D (`b.md`, `a.md`) + fichier
       `z.md` -> ordre de traitement `a.md`, `b.md`, `z.md`,
       occurrences consécutives ; fichier avant dossier -> fichier
       traité en premier (FR-004)
-- [ ] T009 [P] [US2] Étendre `tests/integration/test_cli.py` :
+- [x] T009 [P] [US2] Étendre `tests/integration/test_cli.py` :
       test « doublons » — dossier D + `D/a.md` en individuel ->
       `a.md` traité deux fois, deux occurrences consommées, deux
       sorties au nom distinct (FR-001, clarification 2026-10-05)
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Corriger tout échec des tests T008/T009 dans
+- [x] T010 [US2] Corriger tout échec des tests T008/T009 dans
       `md_chunking/inputs.py` (l'ordre et la non-déduplication
       sont portés par la résolution)
 
@@ -151,22 +151,22 @@ introuvable -> code 2 ; un `.md` corrompu -> code 1, lot continué.
 
 ### Tests for User Story 3
 
-- [ ] T011 [P] [US3] Étendre `tests/integration/test_cli.py` :
+- [x] T011 [P] [US3] Étendre `tests/integration/test_cli.py` :
       test « dossier vide/sans .md » — dossier vide et dossier ne
       contenant qu'un `.txt` -> code 0, avertissement sur stderr,
       aucune écriture, `counter.txt` non créé (FR-005b, D4)
-- [ ] T012 [P] [US3] Étendre `tests/integration/test_cli.py` :
+- [x] T012 [P] [US3] Étendre `tests/integration/test_cli.py` :
       test « entrée introuvable » — fichier absent -> code 2,
       message « fichier d'entree introuvable », aucune écriture
       (FR-005)
-- [ ] T013 [P] [US3] Étendre `tests/integration/test_cli.py` :
+- [x] T013 [P] [US3] Étendre `tests/integration/test_cli.py` :
       test « échec isolé » — dossier de 3 `.md` dont 1 illisible
       -> code 1, message nommant le fichier, 2 documents traités
       (4 sorties) (FR-006, SC-004)
 
 ### Implementation for User Story 3
 
-- [ ] T014 [US3] Corriger tout échec des tests T011-T013 dans
+- [x] T014 [US3] Corriger tout échec des tests T011-T013 dans
       `md_chunking/inputs.py` et `md_chunking/cli.py`
 
 **Checkpoint**: les trois stories sont indépendamment
@@ -178,15 +178,15 @@ fonctionnelles ; la suite complète est verte.
 
 **Purpose**: documentation et validation de bout en bout.
 
-- [ ] T015 [P] Mettre à jour `README.md` : documenter le passage
+- [x] T015 [P] Mettre à jour `README.md` : documenter le passage
       d'un dossier en une étape du mode d'emploi débutant (SC-005),
       sans syntaxe d'énumération de shell ; mentionner le filtre
       `.md`, l'ordre alphabétique et le comportement dossier vide
       (contrat contracts/cli.md)
-- [ ] T016 Exécuter les six scénarios de
+- [x] T016 Exécuter les six scénarios de
       `specs/005-dossier-entree-cli/quickstart.md` sur le corpus
       réel en dossiers temporaires et consigner les résultats
-- [ ] T017 Passer la suite complète `.venv/Scripts/python -m
+- [x] T017 Passer la suite complète `.venv/Scripts/python -m
       pytest` puis les hooks pre-commit ; tout doit être vert
 
 ---
