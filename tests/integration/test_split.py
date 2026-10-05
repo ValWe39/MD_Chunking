@@ -40,6 +40,7 @@ def test_article_propre_sections_et_fourchette():
         "section",
         "paragraphe",
         "phrase",
+        "mot",
     }
     refs = [c.ref for c in chunks]
     assert refs == list(range(1, len(chunks) + 1))

@@ -48,6 +48,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="overlap en pourcentage du chunk (0 a 20)",
     )
     parser.add_argument(
+        "--guillemets",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="respecter les guillemets dans le decoupage "
+        "(defaut : actif ; --no-guillemets pour desactiver)",
+    )
+    parser.add_argument(
         "--typologie",
         default=DEFAULT_PRESET,
         choices=sorted(PRESETS),
@@ -91,7 +98,7 @@ def _preset_effectif(args: argparse.Namespace) -> tuple[Preset, str]:
     chunk_max = args.max if args.max is not None else preset.chunk_max
     overlap = args.overlap if args.overlap is not None else preset.overlap_pct
     return (
-        Preset(preset.name, chunk_min, chunk_max, overlap),
+        Preset(preset.name, chunk_min, chunk_max, overlap, args.guillemets),
         preset.name,
     )
 

@@ -52,6 +52,21 @@ def test_defauts_du_preset_appliques():
     assert (preset.chunk_min, preset.chunk_max) == (100, 1000)
 
 
+def test_guillemets_actifs_par_defaut():
+    """Bug chunking-quotes-words : regle 1 activee sans option."""
+    assert PRESETS["documentation"].guillemets is True
+    args = parse_args([FIXTURE])
+    assert args.guillemets is True
+    preset, _ = _preset_effectif(args)
+    assert preset.guillemets is True
+
+
+def test_option_no_guillemets_desactive():
+    args = parse_args([FIXTURE, "--no-guillemets"])
+    preset, _ = _preset_effectif(args)
+    assert preset.guillemets is False
+
+
 def test_min_superieur_ou_egal_max_refuse():
     with pytest.raises(ConfigError, match="--min"):
         parse_args([FIXTURE, "--min", "1000", "--max", "100"])

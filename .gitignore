@@ -20,7 +20,8 @@ venv/
 dist/
 *.egg-info/
 
-# Ignorer .specify/ sauf assessments/ et memory/
+# Ignorer .specify/ sauf assessments/, bugs/ et memory/
 .specify/*
 !.specify/assessments/
+!.specify/bugs/
 !.specify/memory/

@@ -1,12 +1,27 @@
-"""Decoupage structurel : sections, paragraphes, phrases (FR-002 a FR-004).
+"""Decoupage structurel : sections, paragraphes, phrases, mots en
+dernier recours (FR-002 a FR-004 ; bug chunking-quotes-words,
+regles 1 a 3).
 
 Socle : ``MarkdownHeaderSplitter`` de haystack-ai (decision D1) pour le
 decoupage par titres avec hierarchie en metadonnees. L'occupation
 maximale (heuristique gloutonne, FR-004) et les unites atomiques (blocs
 de code, tableaux) sont gerees ici, en caracteres (FR-002).
+
+Regles du bug chunking-quotes-words :
+- regle 1 : le decoupage de phrases ne coupe jamais a l'interieur
+  d'une citation ouverte (guillemets francais et anglo-saxons), ni
+  entre une ponctuation finale et le guillemet fermant qui la suit ;
+  regle hierarchiquement plus faible que les bornes de taille, active
+  par defaut (``Preset.guillemets``) ;
+- regle 2 : toute coupure de phrase ou de citation entre deux chunks
+  est marquee ``...`` en debut et fin de chunk, marqueurs comptes
+  dans la taille (reservation en amont) ;
+- regle 3 : une phrase plus longue que ``chunk_max`` descend aux
+  frontieres de mots en dernier recours, coupure marquee (regle 2).
 """
 
 import re
+from dataclasses import replace
 
 from haystack import Document
 from haystack.components.preprocessors import MarkdownHeaderSplitter
@@ -20,6 +35,26 @@ _FENCE_LINE = re.compile(r"^\s*```")
 _TABLE_LINE = re.compile(r"^\s*\|")
 
 _SPLITTER = MarkdownHeaderSplitter(keep_headers=True, secondary_split=None)
+
+MARKER = "..."
+_MARKER_BUDGET = 2 * len(MARKER)
+_QUOTE_CHARS = ("«", "»", '"')
+
+
+def quote_balance(text: str) -> int:
+    """Solde des guillemets francais de ``text`` (ouverts moins
+    fermes) ; negatif si le texte demarre en pleine citation."""
+    return text.count("«") - text.count("»")
+
+
+def english_quote_count(text: str) -> int:
+    """Nombre de guillemets anglo-saxons de ``text``, hors guillemet
+    de pouce apres un chiffre (ex. ``6"``)."""
+    total = 0
+    for i, ch in enumerate(text):
+        if ch == '"' and not (i and text[i - 1].isdigit()):
+            total += 1
+    return total
 
 
 def _is_atomic(block: str) -> bool:
@@ -65,8 +100,29 @@ def _units(text: str) -> list[tuple[str, bool]]:
     return [(b, a or _is_atomic(b)) for b, a in units]
 
 
-def _split_sentences(text: str) -> list[str]:
-    return [s for s in _SENTENCE_SPLIT.split(text) if s.strip()]
+def _split_sentences(text: str, respect_quotes: bool = False) -> list[str]:
+    """Decoupe en phrases ; avec ``respect_quotes``, aucune frontiere
+    n'est placee a l'interieur d'une citation ouverte ni entre une
+    ponctuation finale et le guillemet fermant qui la suit (regle 1).
+    """
+    if not respect_quotes:
+        return [s for s in _SENTENCE_SPLIT.split(text) if s.strip()]
+    segments: list[str] = []
+    start = 0
+    pos = 0
+    fr = 0
+    en = 0
+    for m in _SENTENCE_SPLIT.finditer(text):
+        consumed = text[pos : m.start()]
+        fr += quote_balance(consumed)
+        en += english_quote_count(consumed)
+        pos = m.start()
+        if fr > 0 or en % 2 == 1 or text[m.end() :].startswith("»"):
+            continue  # frontiere refusee : citation ouverte
+        segments.append(text[start : m.start()])
+        start = m.end()
+    segments.append(text[start:])
+    return [s for s in segments if s.strip()]
 
 
 def _group(texts: list[str], boundary: str, atomic: bool = False) -> dict:
@@ -101,17 +157,54 @@ def _pack(items: list[str], boundary: str, p: Preset) -> list[dict]:
     return out
 
 
+def _word_packs(sentence: str, p: Preset) -> list[dict]:
+    """Coupe une phrase plus longue que chunk_max aux frontieres de
+    mots, dernier recours de la hierarchie (regle 3) ; chaque coupure
+    porte le marqueur ``...`` compte dans la taille (regle 2). Un mot
+    seul plus long que la borne reste indivisible et signale atomique.
+    """
+    words = sentence.split()
+    pieces: list[list[str]] = []
+    buf: list[str] = []
+    n = 0
+    for w in words:
+        size = len(w) if not buf else n + 1 + len(w)
+        budget = p.chunk_max - (2 * len(MARKER) if pieces else len(MARKER))
+        if buf and size > budget:
+            pieces.append(buf)
+            buf, n = [], 0
+            size = len(w)
+        if not buf and len(w) > budget:
+            pieces.append([w])
+            continue
+        buf.append(w)
+        n = size
+    if buf:
+        pieces.append(buf)
+    packs: list[dict] = []
+    for i, ws in enumerate(pieces):
+        text = " ".join(ws)
+        atomic = len(text) > p.chunk_max
+        if i > 0:
+            text = MARKER + text
+        if i < len(pieces) - 1:
+            text = text + MARKER
+        packs.append(_group([text], "mot", atomic=atomic))
+    return packs
+
+
 def _sentence_packs(text: str, p: Preset) -> list[dict]:
     """Decoupe un paragraphe trop long en chunks de phrases (FR-003).
 
-    Une phrase unique plus longue que chunk_max reste indivisible et
-    est signalee atomique (pas de split dur au milieu d'une phrase).
+    Une phrase plus longue que chunk_max descend aux frontieres de
+    mots en dernier recours (regle 3), coupure marquee ``...`` ; un
+    mot seul trop long reste indivisible et signale atomique.
     """
-    sentences = _split_sentences(text)
+    sentences = _split_sentences(text, p.guillemets)
     packs: list[dict] = []
     for sentence in sentences:
         if len(sentence) > p.chunk_max:
-            packs.append(_group([sentence], "phrase", atomic=True))
+            packs.extend(_word_packs(sentence, p))
     sentences = [s for s in sentences if len(s) <= p.chunk_max]
     packs.extend(_pack(sentences, "phrase", p))
     return packs
@@ -155,7 +248,7 @@ def _fill(units: list[tuple[str, bool]], p: Preset, single_boundary: str) -> lis
             if buf_len < p.chunk_min:
                 # completer le chunk court avec le debut du paragraphe
                 # suivant, descendu en phrases (dernier recours)
-                sentences = _split_sentences(text)
+                sentences = _split_sentences(text, p.guillemets)
                 rest: list[str] = []
                 for sentence in sentences:
                     if _size(buf) + 2 + len(sentence) <= p.chunk_max:
@@ -183,7 +276,7 @@ def _steal_sentences_from_prev(prev: dict, g: dict, p: Preset) -> None:
     precedent vers g, le precedent restant >= chunk_min."""
     if not prev["texts"]:
         return
-    sentences = _split_sentences(prev["texts"][-1])
+    sentences = _split_sentences(prev["texts"][-1], p.guillemets)
     if len(sentences) < 2:
         return
     kept_head = prev["texts"][:-1]
@@ -208,7 +301,7 @@ def _steal_sentences_from_next(nxt: dict, g: dict, p: Preset) -> None:
     vers g, le suivant restant >= chunk_min."""
     if not nxt["texts"]:
         return
-    sentences = _split_sentences(nxt["texts"][0])
+    sentences = _split_sentences(nxt["texts"][0], p.guillemets)
     if len(sentences) < 2:
         return
     kept_tail = nxt["texts"][1:]
@@ -308,11 +401,38 @@ def _section_pages(doc: DocumentSource, sections: list[str]) -> list[int | None]
     return pages
 
 
+def _mark_cut_quotes(chunks: list[Chunk]) -> None:
+    """Marque ``...`` les coupures de citation entre chunks (regle 2) :
+    solde des guillemets suivi par partie, la regle etant
+    hierarchiquement plus faible que le decoupage. Les unites
+    atomiques (code, tableaux) ne sont ni mesurees ni marquees : leurs
+    guillemets eventuels ne sont pas de la prose.
+    """
+    started = False
+    last_part: str | None = None
+    fr = 0
+    en = 0
+    for chunk in chunks:
+        if not started or chunk.part != last_part:
+            fr, en = 0, 0
+        started = True
+        last_part = chunk.part
+        if chunk.atomic:
+            continue
+        starts_mid = fr > 0 or en % 2 == 1
+        if starts_mid and not chunk.text.startswith(MARKER):
+            chunk.text = MARKER + chunk.text
+        fr += quote_balance(chunk.text)
+        en += english_quote_count(chunk.text)
+        if (fr > 0 or en % 2 == 1) and not chunk.text.endswith(MARKER):
+            chunk.text = chunk.text + MARKER
+
+
 def split_document(doc: DocumentSource, preset: Preset) -> list[Chunk]:
     """Decoupe un document en chunks conformes a la fourchette du preset.
 
     Ordre de priorite FR-003 : sections Markdown si disponibles, sinon
-    paragraphes, sinon phrases en dernier recours.
+    paragraphes, sinon phrases en dernier recours, sinon mots (regle 3).
     """
     if doc.structure == "sections":
         result = _SPLITTER.run(documents=[Document(content=doc.normalized_content)])
@@ -326,7 +446,13 @@ def split_document(doc: DocumentSource, preset: Preset) -> list[Chunk]:
 
     raw: list[dict] = []
     for (text, part), page in zip(sections, pages):
-        for group in _fill(_units(text), preset, single_boundary):
+        eff = preset
+        if preset.guillemets and any(c in text for c in _QUOTE_CHARS):
+            # resserve la place des marqueurs de coupure de citation
+            # (regle 2) : jamais de depassement de chunk_max marqueurs
+            # compris
+            eff = replace(preset, chunk_max=preset.chunk_max - _MARKER_BUDGET)
+        for group in _fill(_units(text), eff, single_boundary):
             raw.append({**group, "part": part, "page": page})
 
     chunks: list[Chunk] = []
@@ -349,5 +475,8 @@ def split_document(doc: DocumentSource, preset: Preset) -> list[Chunk]:
         if len(refs) > 1:
             for position, ref in enumerate(refs, start=1):
                 chunks[ref - 1].position_in_part = position
+
+    if preset.guillemets:
+        _mark_cut_quotes(chunks)
 
     return chunks

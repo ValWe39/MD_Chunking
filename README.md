@@ -68,10 +68,20 @@ Options principales (contrat :
   (défauts du preset : 100 / 1000)
 - `--overlap` : overlap entre chunks voisins, en pourcentage (0 a 20,
   defaut 15)
+- `--guillemets` / `--no-guillemets` : respecter les guillemets
+  (français `« »` et anglo-saxons `"`) dans le découpage — jamais de
+  coupure à l'intérieur d'une citation quand la taille le permet,
+  `...` marquant toute coupure de phrase ou de citation entre chunks
+  (marqueurs comptés dans la taille ; défaut : actif)
 - `--typologie` : preset `documentation` (defaut), `articles`,
   `conversations`, `code` ou `livre`
 - `--output` : dossier de sortie (defaut : `output/`, relatif)
 - `--no-review` : ne pas produire le rendu de relecture
+
+Hiérarchie de découpage : partie / sous-partie > paragraphe >
+phrase > mot (dernier recours, coupure marquée `...`). L'overlap
+prélevé sur le chunk précédent descend lui aussi jusqu'aux mots en
+dernier recours et porte `...` en cas de coupure.
 
 Chaque document traité écrit directement dans le dossier de sortie
 deux fichiers au nom unique à 18 chiffres (contrat :

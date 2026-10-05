@@ -39,7 +39,8 @@ class Chunk:
     - ``ref`` : reference unique sequentielle par document (commence a 1) ;
     - ``text`` : jamais vide ;
     - ``length`` : ``len(text)`` en caracteres (unite de la spec, FR-002) ;
-    - ``boundary`` : niveau utilise (section, paragraphe ou phrase) ;
+    - ``boundary`` : niveau utilise (section, paragraphe, phrase
+      ou mot en dernier recours) ;
     - ``atomic`` : vrai si entite indivisible (bloc code, tableau).
     """
 
@@ -54,7 +55,7 @@ class Chunk:
     def __post_init__(self) -> None:
         if not self.text:
             raise ValueError(f"chunk {self.ref} : texte vide interdit")
-        if self.boundary not in {"section", "paragraphe", "phrase"}:
+        if self.boundary not in {"section", "paragraphe", "phrase", "mot"}:
             raise ValueError(f"frontiere inconnue : {self.boundary}")
 
     @property

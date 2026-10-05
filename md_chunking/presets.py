@@ -11,12 +11,15 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Preset:
-    """Bornes d'un preset : tailles en caracteres, overlap en %."""
+    """Bornes d'un preset : tailles en caracteres, overlap en %,
+    respect des guillemets dans le decoupage (bug
+    chunking-quotes-words, actif par defaut)."""
 
     name: str
     chunk_min: int
     chunk_max: int
     overlap_pct: int
+    guillemets: bool = True
 
 
 PRESETS: dict[str, Preset] = {
