@@ -1,5 +1,12 @@
 # Contrat : rendu de relecture (review.md)
 
+> **Amendement (2026-10-05, feature 004)** : les règles fixant le ratio
+> à 4 caractères par token sont amendées — le ratio est un paramètre
+> d'exécution (défaut 3,5, affiché dans l'en-tête arrondi à une
+> décimale). Le contrat en vigueur pour ces points est
+> `specs/004-ratio-tokens-cli/contracts/review-render.md` ; le reste
+> du présent contrat reste applicable.
+
 **Feature**: specs/002-compteur-tokens-chunks | **Date**: 2026-10-02
 **Enrichit** : FR-008 de la feature 001 (specs/001-md-chunking).
 

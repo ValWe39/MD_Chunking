@@ -197,3 +197,76 @@ def test_review_porte_l_estimation_index_sans_tokens(tmp_path, compteur):
     assert "- tokens (estimation) : ≈ " in review
     index = json.loads(_jsons(sortie)[0].read_text(encoding="utf-8"))
     assert "tokens" not in json.dumps(index)
+
+
+def test_defaut_3_5_sans_option_index_sans_ratio(tmp_path, compteur):
+    """FR-001, FR-007, SC-004 (feature 004) : sans option, l'en-tete
+    du review porte le defaut 3,5 ; l'index JSON ne contient ni champ
+    tokens ni champ ratio, octet pour octet."""
+    sortie = tmp_path / "out"
+    assert main([str(PROPRE), "--output", str(sortie)]) == 0
+    review = next(sortie.glob("*_review.md")).read_text(encoding="utf-8")
+    assert "~3.5 caracteres par token" in review
+    brut = _jsons(sortie)[0].read_text(encoding="utf-8")
+    assert "ratio" not in brut
+    assert "tokens" not in brut
+    index = json.loads(brut)
+    assert index["params"]["unit"] == "chars"
+
+
+def test_tokencpte_explicite_change_le_review_pas_l_index(tmp_path, compteur):
+    """FR-002, SC-002 (feature 004) : le ratio explicite recalcule les
+    estimations du review ; l'index JSON est identique octet par
+    octet a celui d'une execution au defaut."""
+    sortie_defaut = tmp_path / "defaut"
+    sortie_ratio = tmp_path / "ratio"
+    assert main([str(PROPRE), "--output", str(sortie_defaut)]) == 0
+    code = main([str(PROPRE), "--output", str(sortie_ratio), "--tokencpte", "3.2"])
+    assert code == 0
+    review = next(sortie_ratio.glob("*_review.md")).read_text(encoding="utf-8")
+    assert "~3.2 caracteres par token" in review
+    index_defaut = _jsons(sortie_defaut)[0].read_text(encoding="utf-8")
+    index_ratio = _jsons(sortie_ratio)[0].read_text(encoding="utf-8")
+    assert index_defaut == index_ratio
+
+
+def test_tokencpte_applique_a_tous_les_documents(tmp_path, compteur):
+    """FR-008 : le ratio est global a l'execution, pas par document."""
+    sortie = tmp_path / "out"
+    code = main(
+        [
+            str(PROPRE),
+            str(BRUITEE),
+            "--output",
+            str(sortie),
+            "--tokencpte",
+            "2",
+        ]
+    )
+    assert code == 0
+    reviews = sorted(sortie.glob("*_review.md"))
+    assert len(reviews) == 2
+    for review in reviews:
+        assert "~2.0 caracteres par token" in review.read_text(encoding="utf-8")
+
+
+def test_tokencpte_avec_no_review_sans_erreur(tmp_path, compteur):
+    """FR-009 : --no-review accepte l'option sans erreur, aucune
+    estimation produite."""
+    sortie = tmp_path / "out"
+    code = main(
+        [str(PROPRE), "--output", str(sortie), "--no-review", "--tokencpte", "2"]
+    )
+    assert code == 0
+    assert len(_jsons(sortie)) == 1
+    assert not list(sortie.glob("*_review.md"))
+
+
+def test_tokencpte_hors_bornes_code_2_rien_n_est_ecrit(tmp_path, compteur):
+    """FR-003, SC-003 : ratio hors bornes -> echec rapide code 2,
+    aucun fichier ecrit, compteur non incremente."""
+    sortie = tmp_path / "out"
+    code = main([str(PROPRE), "--output", str(sortie), "--tokencpte", "12"])
+    assert code == 2
+    assert not sortie.exists()
+    assert not compteur.exists()
