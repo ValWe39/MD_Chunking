@@ -31,7 +31,7 @@ plan.md, Project Structure).
 
 **Purpose**: garantir une base saine avant toute modification
 
-- [ ] T001 Vérifier la base : venv actif et suite `pytest` verte sur
+- [x] T001 Vérifier la base : venv actif et suite `pytest` verte sur
   la branche 005-specify-token-compte avant tout changement
   (`.venv\Scripts\python.exe -m pytest`)
 
@@ -43,7 +43,7 @@ plan.md, Project Structure).
 
 **CRITICAL**: pas de travail de story avant la fin de cette phase
 
-- [ ] T002 Ajouter dans `md_chunking/reviewer.py` la constante
+- [x] T002 Ajouter dans `md_chunking/reviewer.py` la constante
   `RATIO_CHARS_PER_TOKEN = 4` — contrainte data-model : « entière,
   strictement positive ; modifiable dans le code uniquement, sans
   paramètre d'interface en v1 » — et la fonction pure
@@ -70,11 +70,11 @@ aucun champ `tokens` (FR-T01, FR-T04, FR-T07, SC-T01)
 > **NOTE**: écrire ces tests d'abord, s'assurer qu'ils ÉCHOUENT
 > avant l'implémentation de T005
 
-- [ ] T003 [US1] Tests unitaires de `estimate_tokens` dans
+- [x] T003 [US1] Tests unitaires de `estimate_tokens` dans
   `tests/unit/test_reviewer.py` : multiples exacts de 4,
   arrondi supérieur (ex. 5 caractères → 2), texte minimal ;
   déterminisme (même texte → même valeur, FR-T06)
-- [ ] T004 [US1] Tests unitaires de rendu dans
+- [x] T004 [US1] Tests unitaires de rendu dans
   `tests/unit/test_reviewer.py` : ligne
   `- tokens (estimation) : ≈ N` présente pour chaque chunk,
   en-tête `## Chunk <ref> — <N> car.` inchangé (FR-T04),
@@ -82,13 +82,13 @@ aucun champ `tokens` (FR-T01, FR-T04, FR-T07, SC-T01)
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Implémenter la ligne de métadonnées dans
+- [x] T005 [US1] Implémenter la ligne de métadonnées dans
   `build_review` (`md_chunking/reviewer.py`) : après les métadonnées
   existantes, `- tokens (estimation) : ≈ {estimate_tokens(text)}`
   — forme exacte et règles dans
   `specs/002-compteur-tokens-chunks/contracts/review-render.md`
   (dépend de T002, T003, T004)
-- [ ] T006 [US1] Test d'intégration dans
+- [x] T006 [US1] Test d'intégration dans
   `tests/integration/test_cli.py` : exécution CLI complète sur un
   exemple réel ; `review.md` contient une estimation par chunk ;
   `index.json` ne contient aucun champ `tokens` à aucun niveau
@@ -113,13 +113,13 @@ lisible sans documentation externe (FR-T05, SC-T02)
 > **NOTE**: écrire le test d'abord, s'assurer qu'il ÉCHOUE avant
 > l'implémentation de T008
 
-- [ ] T007 [US2] Test unitaire dans `tests/unit/test_reviewer.py` :
+- [x] T007 [US2] Test unitaire dans `tests/unit/test_reviewer.py` :
   mention d'en-tête présente sous le titre, contient « ~4
   caractères par token », aucun nom de modèle (FR-T05, FR-T09)
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Implémenter la mention d'en-tête dans
+- [x] T008 [US2] Implémenter la mention d'en-tête dans
   `build_review` (`md_chunking/reviewer.py`) : ligne sous le titre
   « Tokens estimes a ~4 caracteres par token : approximation
   locale, independante de tout modele d'embedding. » — libellé et
@@ -134,13 +134,13 @@ indépendamment
 
 **Purpose**: documentation et validation transversales
 
-- [ ] T009 [P] Mettre à jour `README.md` : mentionner la ligne
+- [x] T009 [P] Mettre à jour `README.md` : mentionner la ligne
   d'estimation de tokens dans la description de `review.md`
   (section sorties, ligne 74)
-- [ ] T010 Exécuter les six scénarios de
+- [x] T010 Exécuter les six scénarios de
   `specs/002-compteur-tokens-chunks/quickstart.md` et consigner les
   résultats (couvre SC-T01 à SC-T05)
-- [ ] T011 Relancer la suite complète
+- [x] T011 Relancer la suite complète
   (`.venv\Scripts\python.exe -m pytest`) et vérifier les
   non-régressions de la feature 001 : SC-005 (déterminisme),
   SC-006 (zéro réseau), fourchette en caractères intacte (D4)
