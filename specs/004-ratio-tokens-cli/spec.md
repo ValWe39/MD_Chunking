@@ -27,7 +27,7 @@ francais).
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Estimation recalibree par defaut pour le francais (Priority: P1)
+### User Story 1 - Estimation recalibree pour le francais (Priority: P1)
 
 L'utilisateur lance le pipeline sur un document francais sans aucune option
 nouvelle. Le rapport de relecture affiche une estimation de tokens recalculee
