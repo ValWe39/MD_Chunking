@@ -24,8 +24,9 @@ Pas à pas, pour découper un document sans rien connaître à Python :
    envoyer à l'embedding) ; `<18 chiffres>_review.md` présente le
    même découpage pour lecture à l'œil nu. Chaque chunk y affiche
    aussi une estimation approximative de son nombre de tokens
-   (« ≈ N », ~4 caractères par token, indépendante de tout modèle
-   d'embedding).
+   (« ≈ N », ~3,5 caractères par token par défaut, indépendante de
+   tout modèle d'embedding ; réglable avec `--tokencpte`, cf.
+   les options à l'étape 5).
 5. Pour régler la découpe, ajoute des options entre l'outil et le
    document :
 
@@ -75,6 +76,13 @@ Options principales (contrat :
   (marqueurs comptés dans la taille ; défaut : actif)
 - `--typologie` : preset `documentation` (defaut), `articles`,
   `conversations`, `code` ou `livre`
+- `--tokencpte` : ratio caractères par token de l'estimation du
+  review (défaut 3,5 ; bornes ]0 ; 10] ; point décimal, la virgule
+  `3,5` est refusée ; vise le français, ~3,6-3,9 car./token mesuré —
+  toute valeur hors bornes échoue avant toute écriture, code 2).
+  L'option ne touche que le review : découpage, index JSON et noms
+  restent inchangés (contrat :
+  `specs/004-ratio-tokens-cli/contracts/cli.md`)
 - `--output` : dossier de sortie (defaut : `output/`, relatif)
 - `--no-review` : ne pas produire le rendu de relecture
 
@@ -91,8 +99,10 @@ deux fichiers au nom unique à 18 chiffres (contrat :
   `specs/001-md-chunking/contracts/chunk-json.md`, inchangé) ;
 - `<18 chiffres>_review.md` : rendu annote pour relecture humaine avant
   embedding ; chaque chunk porte une estimation approximative de
-  ses tokens (`≈ N`, ~4 caractères par token, modele-agnostique,
-  cf. `specs/002-compteur-tokens-chunks/contracts/review-render.md`).
+  ses tokens (`≈ N`, ratio par défaut ~3,5 caractères par token,
+  réglable par `--tokencpte`, affiché dans l'en-tête du rapport ;
+  modele-agnostique, cf.
+  `specs/004-ratio-tokens-cli/contracts/review-render.md`).
 
 Le nom se décode à la main : 8 chiffres pour les 5 premières lettres
 du nom de fichier source, 6 chiffres pour les 4 premières lettres du

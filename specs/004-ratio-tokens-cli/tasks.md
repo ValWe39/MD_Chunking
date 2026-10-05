@@ -36,7 +36,7 @@ depot (structure existante, voir plan.md).
 
 **Purpose**: Point de depart propre avant toute modification
 
-- [ ] T001 Verifier la base : `python -m pytest` vert (89 tests) sur
+- [X] T001 Verifier la base : `python -m pytest` vert (89 tests) sur
   l'etat courant, arbre de travail propre
 
 ---
@@ -48,12 +48,12 @@ depot (structure existante, voir plan.md).
 **CRITICAL**: Aucune user story ne peut commencer avant la fin de cette
 phase
 
-- [ ] T002 Dans md_chunking/reviewer.py : remplacer la constante
+- [X] T002 Dans md_chunking/reviewer.py : remplacer la constante
   `RATIO_CHARS_PER_TOKEN = 4` par `DEFAULT_RATIO_CHARS_PER_TOKEN = 3.5`
   et faire du ratio un parametre de `estimate_tokens(text, ratio)` —
   calcul `ceil(len(texte) / ratio)` exact via
   `fractions.Fraction(str(ratio))` (FR-001, FR-005 ; research.md D2)
-- [ ] T003 Dans md_chunking/reviewer.py : faire du ratio un parametre
+- [X] T003 Dans md_chunking/reviewer.py : faire du ratio un parametre
   de `build_review(doc, chunks, ratio)` et afficher l'en-tete « Tokens
   estimes a ~{ratio} caracteres par token » avec formatage fixe a une
   decimale (3.5 par defaut, 3.3 pour 3.333) (FR-004 ; research.md D4)
@@ -73,22 +73,22 @@ identique octet par octet a l'etat d'avant la feature
 
 ### Tests for User Story 1
 
-- [ ] T004 [P] [US1] Tests unitaires dans tests/unit/test_reviewer.py :
+- [X] T004 [P] [US1] Tests unitaires dans tests/unit/test_reviewer.py :
   estimation au defaut 3,5 (ex. 7 caracteres → 2 tokens), arrondi
   superieur, en-tete « ~3.5 caracteres par token », determination
   (meme texte → meme valeur) — ecrire d'abord, verifier l'echec
-- [ ] T005 [P] [US1] Test d'integration dans tests/integration/test_cli.py :
+- [X] T005 [P] [US1] Test d'integration dans tests/integration/test_cli.py :
   execution sans option → en-tete 3.5, estimations recalculées, index
   JSON et noms de fichiers identiques octet par octet a ceux produits
   sans la feature (SC-004) — ecrire d'abord, verifier l'echec
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Dans md_chunking/cli.py : router le ratio effectif
+- [X] T006 [US1] Dans md_chunking/cli.py : router le ratio effectif
   (defaut 3.5) de `parse_args` jusqu'a `build_review` via
   `process_document` (signature mise a jour ; aucun autre module
   touche) (FR-001 ; research.md D1)
-- [ ] T007 [US1] Valider le scenario 1 du quickstart.md sur
+- [X] T007 [US1] Valider le scenario 1 du quickstart.md sur
   Examples/nettoye.md : en-tete ~3.5, estimations coherentes, suite
   pytest verte
 
@@ -107,22 +107,22 @@ identique entre les deux executions
 
 ### Tests for User Story 2
 
-- [ ] T008 [P] [US2] Tests unitaires dans tests/unit/test_cli.py :
+- [X] T008 [P] [US2] Tests unitaires dans tests/unit/test_cli.py :
   `parse_args` accepte `--tokencpte 3.2` et expose la valeur ;
   en-tete arrondi a une decimale (saisie 3.333 → « 3.3 ») — ecrire
   d'abord, verifier l'echec
-- [ ] T009 [P] [US2] Tests d'integration dans tests/integration/test_cli.py :
+- [X] T009 [P] [US2] Tests d'integration dans tests/integration/test_cli.py :
   option explicite appliquee a tous les documents d'une execution
   multi-fichiers ; `--no-review --tokencpte 2` sans erreur, aucun
   rapport produit (FR-008, FR-009) — ecrire d'abord, verifier l'echec
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Dans md_chunking/cli.py : declarer l'option
+- [X] T010 [US2] Dans md_chunking/cli.py : declarer l'option
   `--tokencpte` (`type=float`, point decimal, aucune borne ici —
   bornes en US3) et router sa valeur a la place du defaut
   (FR-002 ; contracts/cli.md)
-- [ ] T011 [US2] Valider les scenarios 2, 5 et 6 du quickstart.md sur
+- [X] T011 [US2] Valider les scenarios 2, 5 et 6 du quickstart.md sur
   Examples/nettoye.md : ratio explicite, --no-review, determinisme sur
   double execution
 
@@ -140,7 +140,7 @@ code de sortie 2, message explicite, aucun fichier ecrit
 
 ### Tests for User Story 3
 
-- [ ] T012 [P] [US3] Tests dans tests/unit/test_cli.py et
+- [X] T012 [P] [US3] Tests dans tests/unit/test_cli.py et
   tests/integration/test_cli.py : bornes 0 et -1 rejetees, 12 rejetee
   avec message « --tokencpte doit etre > 0 et <= 10 (recu : 12.0) »,
   0.5 et 10 acceptes, virgule `3,5` rejetee au parsing (code 2),
@@ -149,11 +149,11 @@ code de sortie 2, message explicite, aucun fichier ecrit
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Dans md_chunking/cli.py : ajouter la validation
+- [X] T013 [US3] Dans md_chunking/cli.py : ajouter la validation
   `0 < ratio <= 10` a la liste d'erreurs de `parse_args` (ConfigError,
   code 2) avec le message du contrat contracts/cli.md (FR-003 ;
   research.md D3)
-- [ ] T014 [US3] Valider les scenarios 3 et 4 du quickstart.md :
+- [X] T014 [US3] Valider les scenarios 3 et 4 du quickstart.md :
   echec rapide sans ecriture, virgule refusee
 
 **Checkpoint**: Les trois stories sont independamment fonctionnelles
@@ -164,14 +164,14 @@ code de sortie 2, message explicite, aucun fichier ecrit
 
 **Purpose**: Documentation, amendement spec 002, validation globale
 
-- [ ] T015 [P] Documenter l'option dans README.md : nom, format (point
+- [X] T015 [P] Documenter l'option dans README.md : nom, format (point
   decimal), bornes ]0 ; 10], defaut 3.5, effet (rapport uniquement),
   exemples (FR-010)
-- [ ] T016 [P] Ajouter la note d'amendement en tete de
+- [X] T016 [P] Ajouter la note d'amendement en tete de
   specs/002-compteur-tokens-chunks/spec.md et de son contrat
   contracts/review-render.md : FR-T02 « sans parametre d'interface en
   v1 » est amende par la feature 004 (FR-010 ; research.md D7)
-- [ ] T017 Suite complete `python -m pytest` verte (SC-005) et
+- [X] T017 Suite complete `python -m pytest` verte (SC-005) et
   revue des six scenarios du quickstart.md ; verification finale :
   aucun champ `tokens` ni `ratio` dans l'index JSON produit
 

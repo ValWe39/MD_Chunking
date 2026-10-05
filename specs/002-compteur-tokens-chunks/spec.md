@@ -1,5 +1,14 @@
 # Feature Specification: Compteur de tokens dans le rapport de relecture
 
+> **Amendement (2026-10-05, feature 004)** : FR-T02 « ratio constant du
+> code : 4 caractères par token, sans paramètre d'interface en v1 » est
+> amendé par `specs/004-ratio-tokens-cli/spec.md` — le ratio devient un
+> paramètre d'exécution (`--tokencpte`, bornes ]0 ; 10], point
+> décimal), défaut recalé à 3,5 caractères par token. Le reste de la
+> présente spécification reste en vigueur ; contrats supersédés pour
+> les seuls points touchés :
+> `specs/004-ratio-tokens-cli/contracts/review-render.md`.
+
 **Feature Branch**: `004-assess2-token-compte`
 
 **Created**: 2026-10-02
