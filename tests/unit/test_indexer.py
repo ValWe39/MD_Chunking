@@ -33,6 +33,7 @@ def test_params_refletent_la_configuration():
         "chunk_min": 100,
         "chunk_max": 1000,
         "overlap_pct": 15,
+        "guillemets": True,
         "unit": "chars",
     }
 
@@ -48,7 +49,7 @@ def test_champs_obligatoires_par_chunk():
     for chunk in index["chunks"]:
         assert chunk["text"]
         assert chunk["length"] == len(chunk["text"])
-        assert chunk["boundary"] in {"section", "paragraphe", "phrase"}
+        assert chunk["boundary"] in {"section", "paragraphe", "phrase", "mot"}
         assert isinstance(chunk["atomic"], bool)
         assert "page" not in chunk  # aucun saut de page balise
 

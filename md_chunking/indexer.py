@@ -40,6 +40,7 @@ def build_index(
             "chunk_min": preset.chunk_min,
             "chunk_max": preset.chunk_max,
             "overlap_pct": preset.overlap_pct,
+            "guillemets": preset.guillemets,
             "unit": "chars",
         },
         "chunks": [

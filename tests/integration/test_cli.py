@@ -67,6 +67,24 @@ def test_naming_option_rejetee(tmp_path, compteur):
     assert not sortie.exists()
 
 
+def test_no_guillemets_visible_dans_les_params(tmp_path, compteur):
+    """Bug chunking-quotes-words : --no-guillemets desactive la regle
+    et le parametre est trace dans le JSON (defaut : actif)."""
+    sortie = tmp_path / "out"
+    code = main([str(PROPRE), "--output", str(sortie), "--no-guillemets"])
+    assert code == 0
+    index = json.loads(_jsons(sortie)[0].read_text(encoding="utf-8"))
+    assert index["params"]["guillemets"] is False
+
+
+def test_guillemets_actifs_par_defaut_dans_les_params(tmp_path, compteur):
+    sortie = tmp_path / "out"
+    code = main([str(PROPRE), "--output", str(sortie)])
+    assert code == 0
+    index = json.loads(_jsons(sortie)[0].read_text(encoding="utf-8"))
+    assert index["params"]["guillemets"] is True
+
+
 def test_lot_continue_apres_echec_d_un_document(tmp_path, compteur):
     """Edge case spec : un document en echec n'arrete pas le lot ;
     code de sortie 1. Le document en echec ne consomme pas de
