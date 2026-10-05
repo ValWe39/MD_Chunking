@@ -6,6 +6,9 @@
 input/
 output/
 
+# Etat local de l'outil : compteur d'occurrence (feature 003, FR-014)
+counter.txt
+
 # Dossiers à ignorer
 Prompts/
 .vibe/

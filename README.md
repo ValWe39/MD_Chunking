@@ -16,14 +16,16 @@ Pas à pas, pour découper un document sans rien connaître à Python :
    ```
 
 3. L'outil répond une ligne du genre
-   `Examples\Exemple1\nettoye.md : 117 chunks -> output\0001` :
-   le nombre de morceaux (chunks) et le dossier de rangement.
-4. Ouvre le dossier `output\0001` : `chunks.json` est la fiche
-   technique de chaque chunk (à envoyer à l'embedding) ; `review.md`
-   présente le même découpage pour lecture à l'œil nu. Chaque chunk
-   y affiche aussi une estimation approximative de son nombre de
-   tokens (« ≈ N », ~4 caractères par token, indépendante de tout
-   modèle d'embedding).
+   `nettoye.md : 117 chunks -> output\007871010302730001.json` :
+   le nombre de morceaux (chunks) et le fichier produit.
+4. Ouvre le dossier `output\` : le document traité y a écrit deux
+   fichiers portant un nom unique à 18 chiffres —
+   `<18 chiffres>.json` est la fiche technique de chaque chunk (à
+   envoyer à l'embedding) ; `<18 chiffres>_review.md` présente le
+   même découpage pour lecture à l'œil nu. Chaque chunk y affiche
+   aussi une estimation approximative de son nombre de tokens
+   (« ≈ N », ~4 caractères par token, indépendante de tout modèle
+   d'embedding).
 5. Pour régler la découpe, ajoute des options entre l'outil et le
    document :
 
@@ -58,7 +60,9 @@ python -m venv .venv
 python -m md_chunking [OPTIONS] FICHIER [FICHIER ...]
 ```
 
-Options principales (contrat : `specs/001-md-chunking/contracts/cli.md`) :
+Options principales (contrat :
+`specs/001-md-chunking/contracts/cli.md`, évolutions feature 003 :
+`specs/003-nommage-sorties-18-chiffres/contracts/cli.md`) :
 
 - `--min` / `--max` : bornes de taille d'un chunk, en caractères
   (défauts du preset : 100 / 1000)
@@ -67,20 +71,33 @@ Options principales (contrat : `specs/001-md-chunking/contracts/cli.md`) :
 - `--typologie` : preset `documentation` (defaut), `articles`,
   `conversations`, `code` ou `livre`
 - `--output` : dossier de sortie (defaut : `output/`, relatif)
-- `--naming` : sous-dossiers `numbered` (defaut) ou `title`
 - `--no-review` : ne pas produire le rendu de relecture
 
-Chaque document traité produit un sous-dossier dedie contenant :
+Chaque document traité écrit directement dans le dossier de sortie
+deux fichiers au nom unique à 18 chiffres (contrat :
+`specs/003-nommage-sorties-18-chiffres/contracts/output-naming.md`) :
 
-- `chunks.json` : index de tracabilite (schema
-  `specs/001-md-chunking/contracts/chunk-json.md`) ;
-- `review.md` : rendu annote pour relecture humaine avant
+- `<18 chiffres>.json` : index de tracabilite (schema
+  `specs/001-md-chunking/contracts/chunk-json.md`, inchangé) ;
+- `<18 chiffres>_review.md` : rendu annote pour relecture humaine avant
   embedding ; chaque chunk porte une estimation approximative de
   ses tokens (`≈ N`, ~4 caractères par token, modele-agnostique,
   cf. `specs/002-compteur-tokens-chunks/contracts/review-render.md`).
 
+Le nom se décode à la main : 8 chiffres pour les 5 premières lettres
+du nom de fichier source, 6 chiffres pour les 4 premières lettres du
+titre du document (numération bijective base 26, A=1 … Z=26, casse et
+accents neutralisés), 4 chiffres pour le numéro d'occurrence. Ce
+numéro avance à chaque document produit et survit aux exécutions : il
+est mémorisé dans `counter.txt` à la racine du projet (hors git) ;
+supprimer ce fichier ramène le prochain numéro à 0001. Deux
+exécutions parallèles de l'outil ne sont pas garanties sans doublon
+(v1, usage local).
+
 Codes de sortie : 0 succes, 1 au moins un document en echec (le lot
-continue), 2 configuration invalide (rien n'est ecrit).
+continue), 2 configuration invalide, y compris `counter.txt` illisible
+(rien n'est ecrit). L'option `--naming` a été supprimée avec les
+sous-dossiers.
 
 ## Confidentialite (constitution du projet)
 
