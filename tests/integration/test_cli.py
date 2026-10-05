@@ -1,7 +1,9 @@
-"""Tests d'integration du CLI (feature 003 : sortie plate, nom 18)."""
+"""Tests d'integration du CLI (feature 003 : sortie plate, nom 18 ;
+feature 005 : entree dossier)."""
 
 import json
 import re
+import shutil
 from pathlib import Path
 
 import pytest
@@ -270,3 +272,151 @@ def test_tokencpte_hors_bornes_code_2_rien_n_est_ecrit(tmp_path, compteur):
     assert code == 2
     assert not sortie.exists()
     assert not compteur.exists()
+
+
+def _corpus(tmp_path: Path, sources: dict[str, Path]) -> Path:
+    """Dossier de travail isole : copie des fixtures sous les noms
+    donnes (jamais Examples/ ni les fixtures elles-memes)."""
+    dossier = tmp_path / "corpus"
+    dossier.mkdir()
+    for nom, source in sources.items():
+        shutil.copy(source, dossier / nom)
+    return dossier
+
+
+def _paires_source_occurrence(sortie: Path) -> list[tuple[str, str]]:
+    """Paires (occurrence, chemin source) triees par occurrence,
+    lues dans l'index JSON de chaque sortie (document.path)."""
+    paires = []
+    for p in _jsons(sortie):
+        index = json.loads(p.read_text(encoding="utf-8"))
+        paires.append((p.stem[-4:], index["document"]["path"]))
+    return sorted(paires)
+
+
+def test_dossier_complet_en_une_commande(tmp_path, compteur):
+    """FR-001, FR-002, SC-001 (feature 005) : dossier de 3 .md plus
+    un .txt -> code 0, 6 sorties a plat, .txt ignore, compteur a
+    0003."""
+    dossier = _corpus(
+        tmp_path,
+        {
+            "a.md": PROPRE,
+            "b.md": BRUITEE,
+            "c.md": PROSE,
+        },
+    )
+    (dossier / "notes.txt").write_text("pas du markdown", encoding="utf-8")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--output", str(sortie)])
+    assert code == 0
+    fichiers = sorted(p.name for p in sortie.iterdir())
+    assert len(fichiers) == 6
+    assert len(_jsons(sortie)) == 3
+    assert len(list(sortie.glob("*_review.md"))) == 3
+    assert compteur.read_text(encoding="utf-8") == "0003\n"
+
+
+def test_ordre_du_dossier_reproductible(tmp_path, compteur):
+    """FR-003, FR-004, SC-002 : tri alphabétique des fichiers du
+    dossier, occurrences attribuées dans le même ordre d'un run à
+    l'autre."""
+    dossier = _corpus(tmp_path, {"b.md": BRUITEE, "a.md": PROPRE})
+    attendu = [
+        ("0001", (dossier / "a.md").as_posix()),
+        ("0002", (dossier / "b.md").as_posix()),
+    ]
+    sortie_a = tmp_path / "out-a"
+    assert main([str(dossier), "--output", str(sortie_a)]) == 0
+    assert _paires_source_occurrence(sortie_a) == attendu
+    compteur.unlink()
+    sortie_b = tmp_path / "out-b"
+    assert main([str(dossier), "--output", str(sortie_b)]) == 0
+    assert _paires_source_occurrence(sortie_b) == attendu
+
+
+def test_melange_dossier_et_fichier_dans_les_deux_sens(tmp_path, compteur):
+    """FR-004 : dossier developpe a sa position ; fichier avant ou
+    apres le dossier, occurrences consecutives."""
+    dossier = _corpus(tmp_path, {"a.md": PROPRE, "b.md": BRUITEE})
+    isole = tmp_path / "z.md"
+    shutil.copy(PROSE, isole)
+    sortie_a = tmp_path / "out-a"
+    assert main([str(dossier), str(isole), "--output", str(sortie_a)]) == 0
+    assert _paires_source_occurrence(sortie_a) == [
+        ("0001", (dossier / "a.md").as_posix()),
+        ("0002", (dossier / "b.md").as_posix()),
+        ("0003", isole.as_posix()),
+    ]
+    compteur.unlink()
+    sortie_b = tmp_path / "out-b"
+    assert main([str(isole), str(dossier), "--output", str(sortie_b)]) == 0
+    assert _paires_source_occurrence(sortie_b) == [
+        ("0001", isole.as_posix()),
+        ("0002", (dossier / "a.md").as_posix()),
+        ("0003", (dossier / "b.md").as_posix()),
+    ]
+
+
+def test_doublons_traites_a_chaque_occurrence(tmp_path, compteur):
+    """FR-001 : dossier + fichier deja couvert -> traite deux fois,
+    deux occurrences, sorties au nom distinct."""
+    dossier = _corpus(tmp_path, {"a.md": PROPRE, "b.md": BRUITEE})
+    sortie = tmp_path / "out"
+    code = main([str(dossier), str(dossier / "a.md"), "--output", str(sortie)])
+    assert code == 0
+    assert len(_jsons(sortie)) == 3
+    assert _paires_source_occurrence(sortie) == [
+        ("0001", (dossier / "a.md").as_posix()),
+        ("0002", (dossier / "b.md").as_posix()),
+        ("0003", (dossier / "a.md").as_posix()),
+    ]
+    noms = sorted(p.name for p in _jsons(sortie))
+    assert len(set(noms)) == 3
+    assert compteur.read_text(encoding="utf-8") == "0003\n"
+
+
+def test_dossier_vide_ou_sans_md_succes_sans_ecriture(tmp_path, compteur, capsys):
+    """FR-005b, D4 : code 0, avertissement sur stderr, aucune
+    ecriture, compteur non consulte."""
+    sortie = tmp_path / "out"
+    vide = tmp_path / "vide"
+    vide.mkdir()
+    assert main([str(vide), "--output", str(sortie)]) == 0
+    assert f"Dossier sans fichier .md : {vide}" in capsys.readouterr().err
+    sans_md = tmp_path / "sans-md"
+    sans_md.mkdir()
+    (sans_md / "x.txt").write_text("x", encoding="utf-8")
+    assert main([str(sans_md), "--output", str(sortie)]) == 0
+    assert f"Dossier sans fichier .md : {sans_md}" in capsys.readouterr().err
+    assert not sortie.exists()
+    assert not compteur.exists()
+
+
+def test_entree_introuvable_code_2_rien_n_est_ecrit(tmp_path, compteur):
+    """FR-005 : chemin absent -> code 2, message existant, aucune
+    ecriture (y compris le compteur)."""
+    sortie = tmp_path / "out"
+    code = main([str(tmp_path / "absent.md"), "--output", str(sortie)])
+    assert code == 2
+    assert not sortie.exists()
+    assert not compteur.exists()
+
+
+def test_echec_isole_dans_un_dossier_code_1(tmp_path, compteur, capsys):
+    """FR-006, SC-004 : un .md illisible ne rompt pas le lot ;
+    message nommant le fichier, autres documents traites."""
+    dossier = _corpus(
+        tmp_path,
+        {"a.md": PROPRE, "b.md": BRUITEE, "c.md": PROSE},
+    )
+    (dossier / "b.md").write_bytes(b"\xff\xfe contenu non utf-8")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--output", str(sortie)])
+    assert code == 1
+    assert "b.md" in capsys.readouterr().err
+    assert len(_jsons(sortie)) == 2
+    assert _paires_source_occurrence(sortie) == [
+        ("0001", (dossier / "a.md").as_posix()),
+        ("0002", (dossier / "c.md").as_posix()),
+    ]

@@ -1,5 +1,6 @@
 """Point d'entree CLI (constitution IV) : validation, orchestration,
-codes de sortie 0/1/2 (contrat contracts/cli.md, feature 003)."""
+codes de sortie 0/1/2 (contrats contracts/cli.md, features 001 a
+005 ; entree dossier : feature 005)."""
 
 import argparse
 import sys
@@ -7,6 +8,7 @@ from pathlib import Path
 
 from .counter import CounterError, next_value, persist, read_counter
 from .indexer import build_index, write_index
+from .inputs import InputError, resolve_inputs
 from .models import Chunk, DocumentSource
 from .naming import build_output_name
 from .normalizer import build_document
@@ -25,15 +27,20 @@ class ConfigError(Exception):
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    """Analyse et valide les arguments (FR-012 de la feature 003 :
-    plus d'option --naming)."""
+    """Analyse et valide les options (FR-012 de la feature 003 :
+    plus d'option --naming). Les entrees fichiers/dossiers sont
+    resolues ensuite par resolve_inputs (feature 005)."""
 
     parser = argparse.ArgumentParser(
         prog="md_chunking",
         description=("Decoupe des documents Markdown en chunks traces et relisibles."),
     )
     parser.add_argument(
-        "fichiers", nargs="+", type=Path, help="fichiers Markdown a decouper"
+        "fichiers",
+        nargs="+",
+        type=Path,
+        help="fichiers Markdown ou dossiers a decouper (feature 005 :"
+        " un dossier traite tous ses fichiers .md)",
     )
     parser.add_argument(
         "--min", type=int, default=None, help="taille min d'un chunk, en caracteres"
@@ -92,9 +99,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     chunk_max = args.max if args.max is not None else preset.chunk_max
     if chunk_min >= chunk_max:
         errors.append(f"--min ({args.min}) doit etre < --max ({args.max})")
-    for fichier in args.fichiers:
-        if not fichier.is_file():
-            errors.append(f"fichier d'entree introuvable : {fichier}")
     if errors:
         raise ConfigError("\n".join(errors))
     return args
@@ -135,13 +139,24 @@ def process_document(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Point d'entree : 0 succes, 1 echec d'execution, 2 config
-    invalide (y compris compteur illisible, FR-009)."""
+    """Point d'entree : 0 succes (y compris un dossier vide ou sans
+    .md, FR-005b de la feature 005), 1 echec d'execution, 2 config
+    invalide (y compris compteur illisible, FR-009 de la 003)."""
     try:
         args = parse_args(argv)
     except ConfigError as err:
         print(f"Erreur de configuration :\n{err}", file=sys.stderr)
         return _EXIT_CONFIG
+
+    try:
+        documents, avertissements = resolve_inputs(args.fichiers)
+    except InputError as err:
+        print(f"Erreur de configuration :\n{err}", file=sys.stderr)
+        return _EXIT_CONFIG
+    for avertissement in avertissements:
+        print(avertissement, file=sys.stderr)
+    if not documents:
+        return _EXIT_OK
 
     try:
         dernier = read_counter()
@@ -151,7 +166,7 @@ def main(argv: list[str] | None = None) -> int:
 
     preset, preset_name = _preset_effectif(args)
     failures = 0
-    for fichier in args.fichiers:
+    for fichier in documents:
         try:
             doc = build_document(fichier)
         except (OSError, ValueError) as err:
