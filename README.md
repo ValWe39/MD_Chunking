@@ -107,6 +107,10 @@ Options principales (contrat :
   `specs/004-ratio-tokens-cli/contracts/cli.md`)
 - `--output` : dossier de sortie (defaut : `output/`, relatif)
 - `--no-review` : ne pas produire le rendu de relecture
+- `--add-context` : embarquer dans chaque JSON de sortie les
+  métadonnées d'un fichier de contexte JSON déposé à côté du
+  document (feature 006) ; sans l'option, la sortie ne diffère de
+  l'existant que par le champ `document.chunkingid`
 
 Hiérarchie de découpage : partie / sous-partie > paragraphe >
 phrase > mot (dernier recours, coupure marquée `...`). L'overlap
@@ -118,7 +122,10 @@ deux fichiers au nom unique à 18 chiffres (contrat :
 `specs/003-nommage-sorties-18-chiffres/contracts/output-naming.md`) :
 
 - `<18 chiffres>.json` : index de tracabilite (schema
-  `specs/001-md-chunking/contracts/chunk-json.md`, inchangé) ;
+  `specs/001-md-chunking/contracts/chunk-json.md`, amendé par
+  `specs/006-add-context/contracts/chunk-json.md` :
+  `document.chunkingid` dans chaque sortie, `document.context`
+  verbatim — vides compris — si un contexte est apparié) ;
 - `<18 chiffres>_review.md` : rendu annote pour relecture humaine avant
   embedding ; chaque chunk porte une estimation approximative de
   ses tokens (`≈ N`, ratio par défaut ~3,5 caractères par token,
@@ -135,6 +142,20 @@ est mémorisé dans `counter.txt` à la racine du projet (hors git) ;
 supprimer ce fichier ramène le prochain numéro à 0001. Deux
 exécutions parallèles de l'outil ne sont pas garanties sans doublon
 (v1, usage local).
+
+Contexte utilisateur (`--add-context`, feature 006) : dépose à côté
+de chaque document un fichier de contexte JSON à sept clés
+(`Typologie`, `Auteur(s)`, `Titre`, `Editeur`, `Date`, `Référence`,
+`Citation`) et ajoute l'option. Un dossier contenant exactement un
+`.md` et un `.json` forme un couple, quel que soit le nom du
+`.json` ; avec l'option, les dossiers sont parcourus récursivement,
+niveau par niveau. Dans un dossier mélangé, seuls les couples dont
+les 8 premiers caractères des noms (accents et espaces
+neutralisés) coïncident sont appariés ; les autres documents
+restent classiques, et tout état dégradé (`.json` invalide, ambigu
+ou orphelin) produit un avertissement, jamais un échec. Un fichier
+passé individuellement n'est jamais apparié (contrat :
+`specs/006-add-context/contracts/cli.md`).
 
 Codes de sortie : 0 succes, 1 au moins un document en echec (le lot
 continue), 2 configuration invalide, y compris `counter.txt` illisible

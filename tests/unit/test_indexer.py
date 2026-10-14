@@ -1,4 +1,5 @@
-"""Tests unitaires de l'index JSON (T017, contrat chunk-json.md)."""
+"""Tests unitaires de l'index JSON (T017, contrat chunk-json.md ;
+feature 006 : chunkingid et context, contrat 006)."""
 
 from pathlib import Path
 
@@ -9,22 +10,54 @@ from md_chunking.presets import get_preset
 from md_chunking.splitter import split_document
 
 FIXTURES = Path(__file__).parents[1] / "fixtures"
+NOM_SORTIE = "007871010302730001"
+
+CONTEXTE_VALIDE = {
+    "Typologie": "Compte-rendu",
+    "Auteur(s)": ["Assemblée nationale"],
+    "Titre": "Compte rendu de la première séance",
+    "Editeur": "Assemblée nationale",
+    "Date": "09 octobre 2026",
+    "Référence": "",
+    "Citation": "Assemblée nationale, 09 octobre 2026",
+}
 
 
-def index_fixture(name: str = "article-propre.md") -> dict:
+def index_fixture(
+    name: str = "article-propre.md",
+    nom: str = NOM_SORTIE,
+    contexte: dict | None = None,
+) -> dict:
     preset = get_preset("documentation")
     doc = build_document(FIXTURES / name)
     chunks = split_document(doc, preset)
-    return build_index(doc, preset, "documentation", chunks)
+    return build_index(doc, preset, "documentation", chunks, nom, contexte)
 
 
 def test_schema_et_entete_document():
     index = index_fixture()
     assert index["schema_version"] == SCHEMA_VERSION == "1.0"
     assert index["document"]["path"].endswith("article-propre.md")
+    assert index["document"]["chunkingid"] == NOM_SORTIE
     assert index["document"]["title"] == "Article de reference"
     assert index["document"]["structure"] == "sections"
     assert index["document"]["typologie"] == "documentation"
+
+
+def test_chunkingid_toujours_present():
+    """FR-007 : inconditionnel, egal au nom de sortie sans extension
+    (contrat 006 chunk-json.md)."""
+    index = index_fixture(nom="016492360000000016")
+    assert index["document"]["chunkingid"] == "016492360000000016"
+    assert "context" not in index["document"]
+
+
+def test_context_verbatim_si_apparie():
+    """FR-006, FR-004 : les sept champs copies tels quels, y compris
+    les champs vides, jamais transformes."""
+    index = index_fixture(contexte=CONTEXTE_VALIDE)
+    assert index["document"]["context"] == CONTEXTE_VALIDE
+    assert index["document"]["context"]["Référence"] == ""
 
 
 def test_params_refletent_la_configuration():
@@ -73,7 +106,9 @@ def test_champs_conditionnels_si_et_seulement_si():
         structure="paragraphes",
     )
     chunks = split_document(doc, preset)
-    index_sans_titre = build_index(doc, preset, "documentation", chunks)
+    index_sans_titre = build_index(
+        doc, preset, "documentation", chunks, "000000000000000001"
+    )
     assert "title" not in index_sans_titre["document"]
     for c in index_sans_titre["chunks"]:
         assert "part" not in c

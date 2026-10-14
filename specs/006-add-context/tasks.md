@@ -32,7 +32,7 @@ du dépôt (structure du plan.md).
 
 **Purpose**: s'assurer de partir d'une base verte avant tout.
 
-- [ ] T001 Vérifier la baseline : `.venv/Scripts/python -m pytest`
+- [x] T001 Vérifier la baseline : `.venv/Scripts/python -m pytest`
       passe sur la suite existante (suite verte attendue)
 
 ---
@@ -44,7 +44,7 @@ du dépôt (structure du plan.md).
 de clé, option CLI. Aucune story ne peut commencer avant la fin de
 cette phase.
 
-- [ ] T002 [P] Modifier `md_chunking/indexer.py` : `build_index`
+- [x] T002 [P] Modifier `md_chunking/indexer.py` : `build_index`
       gagne les paramètres `nom: str` et `contexte: dict | None` ;
       le bloc `document` émet `chunkingid` (valeur de `nom`, sans
       extension, pour chaque document, FR-007) et `context`
@@ -52,7 +52,7 @@ cette phase.
       `None`, FR-006) ; `schema_version` reste `"1.0"` (D7) ;
       conformité exacte à `specs/006-add-context/contracts/
       chunk-json.md`
-- [ ] T003 [P] Créer `md_chunking/contexts.py` : constante
+- [x] T003 [P] Créer `md_chunking/contexts.py` : constante
       `CHAMPS_CONTEXTE` (exactement `Typologie`, `Auteur(s)`,
       `Titre`, `Editeur`, `Date`, `Référence`, `Citation` — ni
       manquante, ni supplémentaire, FR-004), fonction pure
@@ -61,7 +61,7 @@ cette phase.
       pure `cle_normale(nom) -> str` (NFKD sans diacritiques,
       minuscules, espaces convertis en `_`, seuls `a-z 0-9 _`
       conservés, tronqué à 8 caractères, D3)
-- [ ] T004 Modifier `md_chunking/cli.py` : option `--add-context`
+- [x] T004 Modifier `md_chunking/cli.py` : option `--add-context`
       (désactivée par défaut, FR-001) ; `process_document` passe
       `nom` et le contexte éventuel à `build_index` ; sans
       l'option, résolution de la feature 005 inchangée et
@@ -84,7 +84,7 @@ scénario 1).
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US-1] Étendre `md_chunking/contexts.py` : fonction
+- [x] T005 [US-1] Étendre `md_chunking/contexts.py` : fonction
       `apparie_niveau(mds, jsons) -> (couples, avertissements)` —
       branche couple : exactement 1 `.md` et 1 `.json` directs,
       quel que soit le nom, le `.json` apparié après validation
@@ -94,18 +94,18 @@ scénario 1).
       contexte, avertissements)` : arguments dans l'ordre, fichier
       individuel jamais apparié (D8), `InputError` existante pour
       introuvable (D1)
-- [ ] T006 [US-1] Brancher dans `md_chunking/cli.py` : avec
+- [x] T006 [US-1] Brancher dans `md_chunking/cli.py` : avec
       `--add-context`, appeler `resolve_avec_contextes`, imprimer
       les avertissements sur stderr, transmettre le contexte de
       chaque document à `process_document` (FR-008, D1)
-- [ ] T007 [P] [US-1] Créer `tests/unit/test_contexts.py` :
+- [x] T007 [P] [US-1] Créer `tests/unit/test_contexts.py` :
       `charge_contexte` (7 clés exactes, clé en trop, clé
       manquante, illisible, valeurs verbatim vides comprises),
       branche couple (1 + 1 quel que soit le nom, autres fichiers
       ignorés, json invalide → avertissement + classique), fichier
       individuel jamais apparié, avertissement exact « .json de
       contexte invalide : {chemin} » (FR-002, FR-004, FR-008)
-- [ ] T008 [US-1] Étendre `tests/integration/test_cli.py` : copie
+- [x] T008 [US-1] Étendre `tests/integration/test_cli.py` : copie
       de `Examples/Extension/Couple` en `tmp_path` avec
       `--add-context` — `document.context` verbatim (`Référence`
       vide), `document.chunkingid` = stem du fichier écrit,
@@ -129,7 +129,7 @@ son propre sous-dossier (quickstart scénario 2).
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US-2] Étendre `md_chunking/contexts.py` : récursivité
+- [x] T009 [US-2] Étendre `md_chunking/contexts.py` : récursivité
       dans `resolve_avec_contextes` — à chaque niveau, seuls les
       fichiers directs comptent (le contenu d'un sous-dossier ne
       compte jamais dans le niveau parent), `.md` du niveau triés
@@ -139,12 +139,12 @@ son propre sous-dossier (quickstart scénario 2).
       {dossier} » puis poursuite de la descente (FR-003, D6) ;
       un dossier argument sans aucun `.md` à l'issue du parcours
       reste code 0 avec avertissement (contrat cli.md)
-- [ ] T010 [US-2] Étendre `tests/unit/test_contexts.py` : niveau
+- [x] T010 [US-2] Étendre `tests/unit/test_contexts.py` : niveau
       intermédiaire sans `.md` dont les sous-dossiers contiennent
       des couples (avertissement + descente), ordre déterministe
       (md du niveau puis sous-dossiers triés, reproductibilité des
       occurrences), imbrication à trois niveaux (FR-003, D2)
-- [ ] T011 [US-2] Étendre `tests/integration/test_cli.py` : copie
+- [x] T011 [US-2] Étendre `tests/integration/test_cli.py` : copie
       de `Examples/Extension/Sous-dossiers` avec `--add-context`
       — trois sorties avec le contexte de leur sous-dossier,
       occurrences reproductibles ; sans l'option, avertissement
@@ -169,7 +169,7 @@ aucun couple mal apparié (quickstart scénario 3).
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US-3] Étendre `md_chunking/contexts.py` :
+- [x] T012 [US-3] Étendre `md_chunking/contexts.py` :
       `apparie_niveau` branche mélangée — un `.md` est apparié à
       un `.json` si `cle_normale` coïncide et que la
       correspondance est unique des deux côtés (D5) ; json apparié
@@ -177,7 +177,7 @@ aucun couple mal apparié (quickstart scénario 3).
       avertissement « .json de contexte orphelin : {chemin} » ;
       ambiguïté → avertissement « Appariement ambigu pour {md} »
       et classique (D6)
-- [ ] T013 [P] [US-3] Étendre `tests/unit/test_contexts.py` :
+- [x] T013 [P] [US-3] Étendre `tests/unit/test_contexts.py` :
       `cle_normale` sur les trois couples réels d'exemples
       (`premiere-0034`/`premiere-seance-du-v-nettoye` →
       `premiere`, `AN_Rappo-0032`/`AN_Rapport` → `an_rappo`,
@@ -185,7 +185,7 @@ aucun couple mal apparié (quickstart scénario 3).
       espaces (`Mécomptes publics` → `mecompte`... au sens de
       D3), ambiguïté (deux `.json` même préfixe, deux `.md` même
       préfixe), orphelin, unicité des deux côtés (FR-005, D3)
-- [ ] T014 [US-3] Étendre `tests/integration/test_cli.py` : copies
+- [x] T014 [US-3] Étendre `tests/integration/test_cli.py` : copies
       de `Examples/Extension/Multi-couples` et `Multi-coupes mix`
       avec `--add-context` — 3 couples appariés par préfixe,
       orphelins en classique sans avertissement d'échec ; json
@@ -202,15 +202,15 @@ complète est opérationnelle sur les quatre dossiers d'exemples.
 
 **Purpose**: documentation et validation transverses.
 
-- [ ] T015 [P] Documenter `--add-context` dans `README.md` :
+- [x] T015 [P] Documenter `--add-context` dans `README.md` :
       option, reconnaissance des couples (co-localisation puis
       préfixe), limitation aux entrées dossier (SC-005)
-- [ ] T016 Exécuter `specs/006-add-context/quickstart.md` en
+- [x] T016 Exécuter `specs/006-add-context/quickstart.md` en
       entier (6 scénarios sur copies des exemples) et vérifier
       SC-001 à SC-004 : appariements exacts, verbatim vides
       compris, `chunkingid` = stem, orphelins identiques au
       classique
-- [ ] T017 Suite complète `.venv/Scripts/python -m pytest` verte
+- [x] T017 Suite complète `.venv/Scripts/python -m pytest` verte
       + hooks pre-commit verts ; vérifier qu'aucune sortie sans
       `--add-context` ne diffère de l'existant au-delà du seul
       champ `chunkingid` (SC-002)

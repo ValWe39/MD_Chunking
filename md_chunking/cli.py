@@ -6,6 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from .contexts import resolve_avec_contextes
 from .counter import CounterError, next_value, persist, read_counter
 from .indexer import build_index, write_index
 from .inputs import InputError, resolve_inputs
@@ -81,6 +82,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="dossier de sortie (defaut : output/)",
     )
     parser.add_argument(
+        "--add-context",
+        action="store_true",
+        help="apparier chaque .md d'un dossier d'entree a un .json de"
+        " contexte (feature 006 : co-localisation par niveau, ou"
+        " prefixe de 8 caracteres normalises pour les niveaux"
+        " meles ; parcours recursif limite a cette option)",
+    )
+    parser.add_argument(
         "--no-review", action="store_true", help="ne pas produire le rendu de relecture"
     )
     args = parser.parse_args(argv)
@@ -124,13 +133,20 @@ def process_document(
     nom: str,
     with_review: bool,
     ratio: float = DEFAULT_RATIO_CHARS_PER_TOKEN,
+    contexte: dict | None = None,
 ) -> list[Chunk]:
     """Pipeline complet d'un document : decoupe, overlap, exports a
     plat dans `output` sous le nom `nom` (FR-001 de la feature 003).
     Le ratio (feature 004) ne touche que le rendu de relecture
-    (FR-006, FR-007) : jamais le decoupage, l'index ni le nom."""
+    (FR-006, FR-007) : jamais le decoupage, l'index ni le nom. Le
+    contexte (feature 006) n'affecte que l'index : `chunkingid`
+    inconditionnel (FR-007), `context` verbatim si apparie
+    (FR-006)."""
     chunks = apply_overlap(split_document(doc, preset), preset)
-    write_index(build_index(doc, preset, preset_name, chunks), output / f"{nom}.json")
+    write_index(
+        build_index(doc, preset, preset_name, chunks, nom, contexte),
+        output / f"{nom}.json",
+    )
     if with_review:
         (output / f"{nom}_review.md").write_text(
             build_review(doc, chunks, ratio), encoding="utf-8"
@@ -149,7 +165,11 @@ def main(argv: list[str] | None = None) -> int:
         return _EXIT_CONFIG
 
     try:
-        documents, avertissements = resolve_inputs(args.fichiers)
+        if args.add_context:
+            documents, avertissements = resolve_avec_contextes(args.fichiers)
+        else:
+            fichiers, avertissements = resolve_inputs(args.fichiers)
+            documents = [(fichier, None) for fichier in fichiers]
     except InputError as err:
         print(f"Erreur de configuration :\n{err}", file=sys.stderr)
         return _EXIT_CONFIG
@@ -166,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
 
     preset, preset_name = _preset_effectif(args)
     failures = 0
-    for fichier in documents:
+    for fichier, contexte in documents:
         try:
             doc = build_document(fichier)
         except (OSError, ValueError) as err:
@@ -184,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
                 nom,
                 not args.no_review,
                 ratio=args.tokencpte,
+                contexte=contexte,
             )
             persist(occurrence)
         except (OSError, ValueError) as err:
