@@ -24,18 +24,28 @@ def build_index(
     preset: Preset,
     preset_name: str,
     chunks: list[Chunk],
+    nom: str,
+    contexte: dict | None = None,
 ) -> dict:
-    """Construit l'index conforme au contrat contracts/chunk-json.md."""
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "document": _omit_none(
+    """Construit l'index conforme au contrat 001, amendé par le
+    contrat chunk-json.md de la feature 006 : ``chunkingid``
+    inconditionnel (FR-007), ``context`` si et seulement si un
+    contexte validé a été apparié (FR-006)."""
+    document: dict = {"path": doc.path.as_posix(), "chunkingid": nom}
+    document.update(
+        _omit_none(
             {
-                "path": doc.path.as_posix(),
                 "title": doc.title,
                 "structure": doc.structure,
                 "typologie": preset_name,
             }
-        ),
+        )
+    )
+    if contexte is not None:
+        document["context"] = contexte
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "document": document,
         "params": {
             "chunk_min": preset.chunk_min,
             "chunk_max": preset.chunk_max,

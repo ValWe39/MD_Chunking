@@ -168,7 +168,8 @@ def test_compteur_absent_repart_a_0001(tmp_path, compteur):
 
 def test_compteur_croissant_entre_executions(tmp_path, compteur):
     """SC-005 : numeros strictement croissants entre executions ;
-    SC-003 : contenu du JSON identique, seul le nom avance."""
+    SC-003 : contenu du JSON identique hors chunkingid (contrat
+    006 : le champ porte le nom, qui avance), seul le nom avance."""
     sortie_a = tmp_path / "a"
     sortie_b = tmp_path / "b"
     assert main([str(PROPRE), "--output", str(sortie_a)]) == 0
@@ -177,7 +178,13 @@ def test_compteur_croissant_entre_executions(tmp_path, compteur):
     nom_b = _jsons(sortie_b)[0]
     assert nom_a.stem.endswith("0001")
     assert nom_b.stem.endswith("0002")
-    assert nom_a.read_text(encoding="utf-8") == nom_b.read_text(encoding="utf-8")
+    index_a = json.loads(nom_a.read_text(encoding="utf-8"))
+    index_b = json.loads(nom_b.read_text(encoding="utf-8"))
+    assert index_a["document"]["chunkingid"] == nom_a.stem
+    assert index_b["document"]["chunkingid"] == nom_b.stem
+    del index_a["document"]["chunkingid"]
+    del index_b["document"]["chunkingid"]
+    assert index_a == index_b
 
 
 def test_compteur_corrompu_code_2_rien_n_est_ecrit(tmp_path, compteur):
@@ -218,8 +225,9 @@ def test_defaut_3_5_sans_option_index_sans_ratio(tmp_path, compteur):
 
 def test_tokencpte_explicite_change_le_review_pas_l_index(tmp_path, compteur):
     """FR-002, SC-002 (feature 004) : le ratio explicite recalcule les
-    estimations du review ; l'index JSON est identique octet par
-    octet a celui d'une execution au defaut."""
+    estimations du review ; l'index JSON est identique a celui d'une
+    execution au defaut, hors chunkingid (contrat 006 : le champ
+    porte le nom, qui avance avec le compteur)."""
     sortie_defaut = tmp_path / "defaut"
     sortie_ratio = tmp_path / "ratio"
     assert main([str(PROPRE), "--output", str(sortie_defaut)]) == 0
@@ -227,8 +235,10 @@ def test_tokencpte_explicite_change_le_review_pas_l_index(tmp_path, compteur):
     assert code == 0
     review = next(sortie_ratio.glob("*_review.md")).read_text(encoding="utf-8")
     assert "~3.2 caracteres par token" in review
-    index_defaut = _jsons(sortie_defaut)[0].read_text(encoding="utf-8")
-    index_ratio = _jsons(sortie_ratio)[0].read_text(encoding="utf-8")
+    index_defaut = json.loads(_jsons(sortie_defaut)[0].read_text(encoding="utf-8"))
+    index_ratio = json.loads(_jsons(sortie_ratio)[0].read_text(encoding="utf-8"))
+    del index_defaut["document"]["chunkingid"]
+    del index_ratio["document"]["chunkingid"]
     assert index_defaut == index_ratio
 
 
@@ -420,3 +430,200 @@ def test_echec_isole_dans_un_dossier_code_1(tmp_path, compteur, capsys):
         ("0001", (dossier / "a.md").as_posix()),
         ("0002", (dossier / "c.md").as_posix()),
     ]
+
+
+# --- Feature 006 : --add-context (US-1, US-2, US-3) ---
+
+EXTENSION = Path(__file__).parents[2] / "Examples" / "Extension"
+
+
+def _copie_exemple(tmp_path: Path, nom: str) -> Path:
+    """Copie temporaire d'un dossier d'exemple fourni (jamais
+    l'original, assumption de spec)."""
+    return shutil.copytree(EXTENSION / nom, tmp_path / nom)
+
+
+def test_add_context_dossier_couple(tmp_path, compteur):
+    """US-1, FR-002, FR-006, FR-007 : copie de Couple (1 .md +
+    1 .json, nom quelconque) -> contexte verbatim (Référence vide
+    comprise) et chunkingid = stem du fichier écrit."""
+    dossier = _copie_exemple(tmp_path, "Couple")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--add-context", "--output", str(sortie)])
+    assert code == 0
+    jsons = _jsons(sortie)
+    assert len(jsons) == 1
+    index = json.loads(jsons[0].read_text(encoding="utf-8"))
+    attendu = json.loads((dossier / "premiere-0034.json").read_text(encoding="utf-8"))
+    assert index["document"]["context"] == attendu
+    assert attendu["Référence"] == ""
+    assert index["document"]["chunkingid"] == jsons[0].stem
+    assert index["schema_version"] == "1.0"
+
+
+def test_sans_add_context_context_absent_chunkingid_present(tmp_path, compteur):
+    """FR-001, SC-002 : sans l'option, aucun contexte, json ignore
+    comme tout fichier non .md, .json de contexte jamais recopie
+    (FR-010) ; seule difference : chunkingid."""
+    dossier = _copie_exemple(tmp_path, "Couple")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--output", str(sortie)])
+    assert code == 0
+    jsons = _jsons(sortie)
+    assert len(jsons) == 1
+    index = json.loads(jsons[0].read_text(encoding="utf-8"))
+    assert "context" not in index["document"]
+    assert index["document"]["chunkingid"] == jsons[0].stem
+    assert not (sortie / "premiere-0034.json").exists()
+
+
+def test_add_context_fichier_individuel_jamais_apparie(tmp_path, compteur):
+    """D8 : un .md passe en direct reste classique, chunkingid
+    present, aucune lecture de .json voisin."""
+    dossier = _copie_exemple(tmp_path, "Couple")
+    sortie = tmp_path / "out"
+    code = main(
+        [
+            str(dossier / "premiere-seance-du-v-nettoye.md"),
+            "--add-context",
+            "--output",
+            str(sortie),
+        ]
+    )
+    assert code == 0
+    index = json.loads(_jsons(sortie)[0].read_text(encoding="utf-8"))
+    assert "context" not in index["document"]
+    assert index["document"]["chunkingid"] == _jsons(sortie)[0].stem
+
+
+def test_add_context_sous_dossiers(tmp_path, compteur):
+    """US-2, FR-003 : copie de Sous-dossiers (3 couples) -> trois
+    sorties, chacune avec le contexte de son propre sous-dossier,
+    occurrences dans l'ordre des sous-dossiers tries."""
+    dossier = _copie_exemple(tmp_path, "Sous-dossiers")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--add-context", "--output", str(sortie)])
+    assert code == 0
+    jsons = _jsons(sortie)
+    assert len(jsons) == 3
+    indexes = {
+        i["document"]["path"]: i
+        for i in (json.loads(p.read_text(encoding="utf-8")) for p in jsons)
+    }
+    for sous_dossier in sorted(dossier.iterdir()):
+        if not sous_dossier.is_dir():
+            continue
+        attendu = json.loads(
+            next(sous_dossier.glob("*.json")).read_text(encoding="utf-8")
+        )
+        index = next(i for p, i in indexes.items() if sous_dossier.name in p)
+        assert index["document"]["context"] == attendu
+        assert index["document"]["chunkingid"]
+
+
+def test_sans_add_context_sous_dossiers_comportement_005(tmp_path, compteur, capsys):
+    """FR-003 : sans l'option, aucun sous-dossier n'est parcouru ;
+    avertissement 005 et code 0, aucune ecriture."""
+    dossier = _copie_exemple(tmp_path, "Sous-dossiers")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--output", str(sortie)])
+    assert code == 0
+    assert f"Dossier sans fichier .md : {dossier}" in capsys.readouterr().err
+    assert not sortie.exists()
+    assert not compteur.exists()
+
+
+def test_add_context_lot_mele_couples_et_orphelins(tmp_path, compteur, capsys):
+    """US-3, FR-005, SC-001 : copie de Multi-coupes mix (3 couples
+    par prefixe + 2 .md orphelins) -> 3 contextes, 2 classiques,
+    aucun couple mal apparie, aucun avertissement."""
+    dossier = _copie_exemple(tmp_path, "Multi-coupes mix")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--add-context", "--output", str(sortie)])
+    assert code == 0
+    jsons = _jsons(sortie)
+    assert len(jsons) == 5
+    indexes = [json.loads(p.read_text(encoding="utf-8")) for p in jsons]
+    avec = {
+        i["document"]["path"].rsplit("/", 1)[-1]: i["document"].get("context")
+        for i in indexes
+    }
+    assert avec["premiere-seance-du-v-nettoye.md"]
+    assert avec["AN_Rapport.md"]
+    assert avec["Ecalle_ouvrage.md"]
+    assert avec["IFRI.md"] is None
+    assert avec["Grand_Continent_article.md"] is None
+    assert capsys.readouterr().err == ""
+
+
+def test_add_context_multi_couples(tmp_path, compteur):
+    """US-3 : copie de Multi-couples (3 couples par prefixe) ->
+    trois contextes embarques."""
+    dossier = _copie_exemple(tmp_path, "Multi-couples")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--add-context", "--output", str(sortie)])
+    assert code == 0
+    jsons = _jsons(sortie)
+    assert len(jsons) == 3
+    for p in jsons:
+        index = json.loads(p.read_text(encoding="utf-8"))
+        assert index["document"]["context"]
+
+
+def test_add_context_json_invalide_avertissement_classique(tmp_path, compteur, capsys):
+    """FR-004, FR-008 : json a cle renommee -> avertissement
+    nommant le fichier, document classique, code 0."""
+    dossier = _copie_exemple(tmp_path, "Couple")
+    chemin_json = dossier / "premiere-0034.json"
+    donnees = json.loads(chemin_json.read_text(encoding="utf-8"))
+    donnees["Publisher"] = donnees.pop("Editeur")
+    chemin_json.write_text(json.dumps(donnees, ensure_ascii=False), encoding="utf-8")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--add-context", "--output", str(sortie)])
+    assert code == 0
+    err = capsys.readouterr().err
+    assert f".json de contexte invalide : {chemin_json}" in err
+    index = json.loads(_jsons(sortie)[0].read_text(encoding="utf-8"))
+    assert "context" not in index["document"]
+    assert index["document"]["chunkingid"] == _jsons(sortie)[0].stem
+
+
+def test_add_context_json_orphelin_avertissement(tmp_path, compteur, capsys):
+    """FR-008 : .json sans .md correspondant -> avertissement, lot
+    poursuivi, couples restants apparies."""
+    dossier = _copie_exemple(tmp_path, "Multi-couples")
+    shutil.copy(dossier / "AN_Rappo-0032.json", dossier / "zzz-0099.json")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--add-context", "--output", str(sortie)])
+    assert code == 0
+    err = capsys.readouterr().err
+    assert f".json de contexte orphelin : {dossier / 'zzz-0099.json'}" in err
+    jsons = _jsons(sortie)
+    assert len(jsons) == 3
+    for p in jsons:
+        assert json.loads(p.read_text(encoding="utf-8"))["document"].get("context")
+
+
+def test_add_context_ambiguite_avertissement_classique(tmp_path, compteur, capsys):
+    """FR-005, FR-008 : deux .json memes 8 premiers caracteres pour
+    un .md -> appariement ambigu, document classique, autres
+    couples apparies, code 0."""
+    dossier = _copie_exemple(tmp_path, "Multi-couples")
+    shutil.copy(dossier / "AN_Rappo-0032.json", dossier / "AN_Rappo-0033.json")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--add-context", "--output", str(sortie)])
+    assert code == 0
+    err = capsys.readouterr().err
+    assert f"Appariement ambigu pour {dossier / 'AN_Rapport.md'}" in err
+    jsons = _jsons(sortie)
+    assert len(jsons) == 3
+    pour_an = json.loads(
+        next(
+            p
+            for p in jsons
+            if "AN_Rapport"
+            in json.loads(p.read_text(encoding="utf-8"))["document"]["path"]
+        ).read_text(encoding="utf-8")
+    )
+    assert "context" not in pour_an["document"]
+    assert pour_an["document"]["chunkingid"]
