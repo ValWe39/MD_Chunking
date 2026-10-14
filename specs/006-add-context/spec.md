@@ -17,6 +17,21 @@ Sortie : `document.chunkingid` (stem numérique du fichier de sortie,
 sans `.json`) + `document.context` (7 champs verbatim, vides compris).
 Sans couple : avertissement et processus classique inchangé. »
 
+## Clarifications
+
+### Session 2026-10-14
+
+- Q: Avec `--add-context`, comment la cascade d'appariement
+  doit-elle se comporter dans une arborescence à plusieurs
+  niveaux de sous-dossiers ? → A: Cascade à chaque niveau,
+  comptage par niveau : chaque niveau est évalué sur ses seuls
+  fichiers directs, la reconnaissance couple (FR-002) ou
+  mélangée (FR-005) s'applique à chaque niveau, et la descente se
+  poursuit même à travers un niveau intermédiaire sans .md.
+- Q: Sous quels noms exacts les deux nouveaux champs doivent-ils
+  apparaître dans le bloc documentaire du JSON de sortie ? → A:
+  `document.chunkingid` et `document.context`.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Découper un dossier couple avec son contexte (Priority: P1)
@@ -142,6 +157,9 @@ sortie inchangé.
 - Dossier contenant 1 .md et 2 .json, ou 2 .md et 1 .json :
   le dossier est traité comme mélangé (appariement par préfixe) ;
   si l'appariement reste ambigu, avertissement et processus classique.
+- Niveau intermédiaire sans .md mais dont les sous-dossiers
+  contiennent des couples : avertissement pour le niveau, descente
+  poursuivie, couples des sous-niveaux traités.
 - `.json` orphelin dans un dossier mélangé (aucun .md ne le
   rejoint) : avertissement, aucune sortie ne l'embarque.
 - Fichiers autres que .md et .json dans un dossier couple (images,
@@ -172,14 +190,18 @@ sortie inchangé.
   `.md`, quel que soit son nom, après validation du format attendu
   (FR-004) ; la présence d'autres fichiers de types quelconques ne
   DOIT PAS affecter cette reconnaissance.
-- **FR-003**: Avec `--add-context`, l'outil DOIT appliquer la règle
-  de FR-002 dans chaque sous-dossier d'un dossier d'entrée ; cette
-  récursivité DOIT être circonscrite au mode `--add-context` — sans
-  l'option, aucun sous-dossier n'est parcouru (comportement
-  existant). Un sous-dossier sans `.md` DOIT produire un
-  avertissement et la poursuite du lot ; un sous-dossier dont le .md
-  n'a pas de .json DOIT aboutir au processus classique, sans
-  avertissement.
+- **FR-003**: Avec `--add-context`, l'outil DOIT parcourir
+  récursivement les sous-dossiers d'un dossier d'entrée, à toute
+  profondeur ; la cascade — FR-002 pour les niveaux à un couple,
+  FR-005 pour les niveaux mélangés — s'évalue à chaque niveau sur
+  les seuls fichiers directement présents : le contenu d'un
+  sous-dossier ne compte jamais dans le niveau parent. Cette
+  récursivité DOIT être circonscrite au mode `--add-context` —
+  sans l'option, aucun sous-dossier n'est parcouru (comportement
+  existant). Un niveau sans `.md` DOIT produire un avertissement
+  et la descente se poursuit vers ses sous-dossiers ; un niveau
+  dont un .md n'a pas de .json DOIT aboutir au processus
+  classique, sans avertissement.
 - **FR-004**: Le format attendu d'un `.json` de contexte DOIT être
   un objet contenant exactement les sept clés `Typologie`,
   `Auteur(s)`, `Titre`, `Editeur`, `Date`, `Référence`, `Citation` —
@@ -196,15 +218,13 @@ sortie inchangé.
   candidat ou ambiguïté DOIT produire un avertissement et le
   traitement classique.
 - **FR-006**: Pour chaque document apparié, le JSON de sortie DOIT
-  embarquer, dans le bloc documentaire, un champ de contexte
-  contenant les sept champs du `.json` validé, copiés verbatim, y
-  compris les champs vides.
-- **FR-007**: Le JSON de sortie DOIT embarquer, dans le bloc
-  documentaire, un champ d'identifiant de sortie égal au nom du
-  fichier de sortie, sans l'extension `.json` ; ce champ est
-  inconditionnel : il est émis pour chaque document traité, avec ou
-  sans `--add-context` (clarification utilisateur du 2026-10-14,
-  choix A).
+  embarquer un champ `document.context` contenant les sept champs
+  du `.json` validé, copiés verbatim, y compris les champs vides.
+- **FR-007**: Le JSON de sortie DOIT embarquer un champ
+  `document.chunkingid` égal au nom du fichier de sortie, sans
+  l'extension `.json` ; ce champ est inconditionnel : il est émis
+  pour chaque document traité, avec ou sans `--add-context`
+  (clarification du 2026-10-14).
 - **FR-008**: Tout avertissement lié au contexte (format invalide,
   ambiguïté, .json orphelin, sous-dossier sans .md) DOIT être émis
   sur le flux d'erreur, en français, nommant le fichier en cause, et
@@ -218,8 +238,8 @@ sortie inchangé.
   le dossier de sortie.
 - **FR-011**: Le contrat du JSON de sortie DOIT être amendé pour
   documenter les deux nouveaux champs du bloc documentaire :
-  l'identifiant de sortie, inconditionnel (FR-007), et le champ de
-  contexte, conditionnel à l'appariement (FR-006).
+  `chunkingid`, inconditionnel (FR-007), et `context`,
+  conditionnel à l'appariement (FR-006).
 
 ### Key Entities
 
