@@ -49,8 +49,10 @@ Garde-fous :
 - branche couple : niveau contenant exactement 1 `.md` et 1
   `.json` directs, quel que soit le nom (FR-002) ; le contenu des
   sous-dossiers ne compte jamais dans le niveau parent (D2, D5) ;
-- branche mélangée : préfixe de 8 caractères normalisés unique
-  des deux côtés (FR-005, D3) ; absence ou ambiguïté → classique ;
+- branche mélangée : extension progressive par paliers
+  (8, 12, 16, … jusqu'à la longueur maximale), unicité des
+  deux côtés (FR-005, D3 amendé feature 007) ; absence ou
+  ambiguïté à la longueur maximale → classique ;
 - fichiers individuels : jamais appariés (D8).
 
 ### Clé d'appariement normalisée (éphémère)
@@ -60,10 +62,15 @@ branche mélangée (D3).
 
 | Attribut | Valeur |
 | -------- | ------ |
-| valeur | NFKD, minuscules, espaces → `_`, `a-z 0-9 _`, 8 car. (D3) |
+| valeur | NFKD, minuscules, espaces → `_`, `a-z 0-9 _` (D3) |
 
-Vérifiée sur les exemples : `premiere`, `an_rappo`, `ecalle_o`
-(les trois couples d'`Examples/Extension/` coïncident).
+Amendement feature 007 : plus de troncature dans `cle_normale` ;
+la troncature par paliers (8, 12, 16, …) relève de
+`apparie_niveau()`.
+
+Vérifiée sur les exemples : les trois couples
+d'`Examples/Extension/` coïncident au palier 8 (`premiere`,
+`an_rappo`, `ecalle_o`).
 
 ### Document résolu avec contexte (éphémère)
 

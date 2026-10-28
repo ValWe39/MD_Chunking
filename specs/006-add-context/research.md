@@ -75,6 +75,16 @@ l'assessment amont (cascade, clés `document.chunkingid` et
   conserver les tirets (casserait `premiere` : `premiere-0034` →
   `premiere-` ≠ `premiere`).
 
+> **Amendement (feature 007-robust-pairing, 2026-10-28)** : la
+> troncature fixe à 8 caractères est remplacée par une extension
+> progressive par paliers (8, 12, 16, … jusqu'à la longueur
+> maximale des clés du niveau) dans `apparie_niveau()` ;
+> `cle_normale()` retourne la chaîne normalisée complète sans
+> troncature, chaque `.md` non résolu avance indépendamment, et
+> l'ambiguïté n'est émise qu'à la longueur maximale (clé
+> complète). Décisions D1-D6 :
+> `specs/007-robust-pairing/research.md`.
+
 ### D4 — Validation du format de contexte
 
 - **Decision**: un `.json` de contexte est valide si `json.loads`
