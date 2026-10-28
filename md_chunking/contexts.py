@@ -26,15 +26,16 @@ _AUTORISES = set("abcdefghijklmnopqrstuvwxyz0123456789_")
 
 
 def cle_normale(nom: str) -> str:
-    """Cle d'appariement (D3) : NFKD puis suppression des
-    diacritiques, minuscules, espaces convertis en ``_``, seuls
-    ``a-z 0-9 _`` conserves, tronquee a 8 caracteres."""
+    """Cle d'appariement (D3, amende feature 007) : NFKD puis
+    suppression des diacritiques, minuscules, espaces convertis
+    en ``_``, seuls ``a-z 0-9 _`` conserves, sans troncature
+    (la troncature par paliers releve d'apparie_niveau)."""
     if not nom:
         return ""
     ascii_part = unicodedata.normalize("NFKD", nom)
     ascii_part = ascii_part.encode("ascii", "ignore").decode("ascii")
     base = ascii_part.lower().replace(" ", "_")
-    return "".join(caractere for caractere in base if caractere in _AUTORISES)[:8]
+    return "".join(caractere for caractere in base if caractere in _AUTORISES)
 
 
 def charge_contexte(chemin: Path) -> dict | None:
@@ -57,15 +58,20 @@ def apparie_niveau(
     mds: list[Path],
     jsons: list[Path],
 ) -> tuple[dict[Path, dict], list[str]]:
-    """Apparie les ``.md`` et ``.json`` d'un meme niveau (D5).
+    """Apparie les ``.md`` et ``.json`` d'un meme niveau (D5,
+    amende feature 007 : extension progressive par paliers).
 
     Branche couple (exactement 1 ``.md`` et 1 ``.json``) : le
     ``.json`` est le contexte du ``.md``, quel que soit son nom,
-    apres validation (FR-002). Branche melee : un ``.md`` est
-    apparie a un ``.json`` si leurs cles normalisees coincident et
-    que la correspondance est unique des deux cotes (FR-005).
-    Retourne (contextes par ``.md``, avertissements) ; tout etat
-    degrade est un avertissement, jamais un echec (FR-008).
+    apres validation (FR-002). Branche melee : a chaque palier
+    (8, 12, 16, ... jusqu'a la longueur maximale des cles du
+    niveau), chaque ``.md`` non resolu tente un appariement
+    unique des deux cotes sur les cles tronquees a ce palier
+    et avance independamment (FR-004) ; a la longueur maximale,
+    un ``.md`` avec plusieurs candidats ou des concurrents emet
+    « Appariement ambigu » (FR-005). Retourne (contextes par
+    ``.md``, avertissements) ; tout etat degrade est un
+    avertissement, jamais un echec (FR-008).
     """
     contextes: dict[Path, dict] = {}
     avertissements: list[str] = []
@@ -78,25 +84,45 @@ def apparie_niveau(
         return contextes, avertissements
     cles_md = {md: cle_normale(md.stem) for md in mds}
     cles_json = {js: cle_normale(js.stem) for js in jsons}
-    cles_utilisees = set(cles_md.values())
-    for md, cle in cles_md.items():
-        candidats = [js for js in jsons if cles_json[js] == cle]
-        if len(candidats) > 1:
+    apparies: set[Path] = set()
+    jsons_libres: set[Path] = set(jsons)
+    longueurs = [len(cle) for cle in cles_md.values()]
+    longueurs += [len(cle) for cle in cles_json.values()]
+    longueur_max = max(longueurs, default=0)
+    paliers: list[int] = list(range(8, longueur_max, 4))
+    paliers.append(max(8, longueur_max))
+    for palier in paliers:
+        restants = [md for md in mds if md not in apparies]
+        for md in restants:
+            cle = cles_md[md][:palier]
+            candidats = [js for js in jsons_libres if cles_json[js][:palier] == cle]
+            if len(candidats) != 1:
+                continue
+            concurrents = [
+                m for m in restants if m != md and cles_md[m][:palier] == cle
+            ]
+            if concurrents:
+                continue
+            js = candidats[0]
+            contexte = charge_contexte(js)
+            if contexte is None:
+                avertissements.append(f".json de contexte invalide : {js}")
+            else:
+                contextes[md] = contexte
+            apparies.add(md)
+            jsons_libres.discard(js)
+    for md in mds:
+        if md in apparies:
+            continue
+        cle = cles_md[md]
+        candidats = [js for js in jsons_libres if cles_json[js] == cle]
+        concurrents = [
+            m for m in mds if m != md and m not in apparies and cles_md[m] == cle
+        ]
+        if len(candidats) > 1 or concurrents:
             avertissements.append(f"Appariement ambigu pour {md}")
-            continue
-        if not candidats:
-            continue
-        concurrents = [m for m in mds if m != md and cles_md[m] == cle]
-        if concurrents:
-            avertissements.append(f"Appariement ambigu pour {md}")
-            continue
-        contexte = charge_contexte(candidats[0])
-        if contexte is None:
-            avertissements.append(f".json de contexte invalide : {candidats[0]}")
-        else:
-            contextes[md] = contexte
-    for js, cle in cles_json.items():
-        if cle not in cles_utilisees:
+    for js in jsons:
+        if js in jsons_libres and cles_json[js] not in set(cles_md.values()):
             avertissements.append(f".json de contexte orphelin : {js}")
     return contextes, avertissements
 

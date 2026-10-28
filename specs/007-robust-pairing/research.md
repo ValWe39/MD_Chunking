@@ -69,20 +69,21 @@ avance indépendamment par paliers) et par l'assessment amont
 - **Decision**: les 2 tests d'ambiguïté existants sont
   adaptés pour refléter le nouveau comportement :
   - `test_melee_ambiguite_deux_json_meme_prefixe` : les
-    fichiers `premiere-0034.json` et `premiere-0035.json`
-    ont des clés normalisées complètes différentes
-    (`premiere0034` vs `premiere0035`) → résolus au palier
-    12. Le test vérifie désormais l'appariement correct.
+    clés complètes diffèrent (`premiereseance` vs
+    `premiere0034` / `premiere0035`) → le `.md` reste
+    classique silencieux et les deux `.json` deviennent
+    orphelins. Le test vérifie les deux avertissements
+    orphelins.
   - `test_melee_ambiguite_json_partage_par_deux_md` : les
     fichiers `an_rappo-1.md` et `an_rappo-2.md` ont des
     clés complètes différentes (`an_rappo1` vs `an_rappo2`)
-    → résolus au palier 9 (mais le `.json` `an_rappo-0032`
-    n'a pas de candidat `.md` correspondant, donc reste
-    orphelin). Le test vérifie l'avertissement orphelin.
+    → aucun appariement et le `.json` `an_rappo-0032`
+    reste orphelin. Le test vérifie l'avertissement
+    orphelin, sans ambiguïté.
   - Un nouveau test vérifie le vrai cas d'ambiguïté :
-    deux fichiers de même stem normalisé complet →
-    avertissement « Appariement ambigu » à la longueur
-    maximale.
+    deux fichiers de même clé normalisée complète
+    (`doc 1` et `doc_1` → `doc_1`) → avertissement
+    « Appariement ambigu » à la longueur maximale.
 - **Rationale**: FR-010 ; les anciens tests vérifiaient un
   comportement qui n'existe plus (ambiguïté à 8 caractères
   résoluble à un palier supérieur). Leur valeur de

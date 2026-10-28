@@ -435,6 +435,7 @@ def test_echec_isole_dans_un_dossier_code_1(tmp_path, compteur, capsys):
 # --- Feature 006 : --add-context (US-1, US-2, US-3) ---
 
 EXTENSION = Path(__file__).parents[2] / "Examples" / "Extension"
+PAIRING = Path(__file__).parents[2] / "Examples" / "Pairing"
 
 
 def _copie_exemple(tmp_path: Path, nom: str) -> Path:
@@ -604,17 +605,20 @@ def test_add_context_json_orphelin_avertissement(tmp_path, compteur, capsys):
         assert json.loads(p.read_text(encoding="utf-8"))["document"].get("context")
 
 
-def test_add_context_ambiguite_avertissement_classique(tmp_path, compteur, capsys):
-    """FR-005, FR-008 : deux .json memes 8 premiers caracteres pour
-    un .md -> appariement ambigu, document classique, autres
-    couples apparies, code 0."""
+def test_add_context_prefixe_partage_cles_differentes(tmp_path, compteur, capsys):
+    """FR-010 (feature 007) : deux .json homonymes aux 8 premiers
+    caracteres mais de cles completes differentes -> .md classique
+    silencieux, deux .json orphelins, autres couples apparies,
+    code 0."""
     dossier = _copie_exemple(tmp_path, "Multi-couples")
     shutil.copy(dossier / "AN_Rappo-0032.json", dossier / "AN_Rappo-0033.json")
     sortie = tmp_path / "out"
     code = main([str(dossier), "--add-context", "--output", str(sortie)])
     assert code == 0
     err = capsys.readouterr().err
-    assert f"Appariement ambigu pour {dossier / 'AN_Rapport.md'}" in err
+    assert f"Appariement ambigu pour {dossier / 'AN_Rapport.md'}" not in err
+    assert f".json de contexte orphelin : {dossier / 'AN_Rappo-0032.json'}" in err
+    assert f".json de contexte orphelin : {dossier / 'AN_Rappo-0033.json'}" in err
     jsons = _jsons(sortie)
     assert len(jsons) == 3
     pour_an = json.loads(
@@ -627,3 +631,25 @@ def test_add_context_ambiguite_avertissement_classique(tmp_path, compteur, capsy
     )
     assert "context" not in pour_an["document"]
     assert pour_an["document"]["chunkingid"]
+
+
+def test_add_context_prefixe_long_pairing(tmp_path, compteur, capsys):
+    """US-1, SC-001 (feature 007) : copie de Pairing (3 paires
+    Fipeco a prefixe long) -> 3 contextes embarques, chacun le
+    titre de sa paire, aucun avertissement d'ambiguite."""
+    dossier = shutil.copytree(PAIRING, tmp_path / "Pairing")
+    sortie = tmp_path / "out"
+    code = main([str(dossier), "--add-context", "--output", str(sortie)])
+    assert code == 0
+    assert "Appariement ambigu" not in capsys.readouterr().err
+    jsons = _jsons(sortie)
+    assert len(jsons) == 3
+    attendus = {
+        json.loads(js.read_text(encoding="utf-8"))["Titre"]
+        for js in dossier.glob("*.json")
+    }
+    embarques = {
+        json.loads(p.read_text(encoding="utf-8"))["document"]["context"]["Titre"]
+        for p in jsons
+    }
+    assert embarques == attendus
