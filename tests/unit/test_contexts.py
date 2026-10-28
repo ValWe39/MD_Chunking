@@ -60,21 +60,23 @@ def test_champs_contexte_exacts():
 
 
 def test_cle_normale_exemples_reels():
-    """Les trois couples d'Examples/Extension coincident (D3,
-    valide sur le corpus fourni par l'utilisateur)."""
-    assert cle_normale("premiere-0034") == "premiere"
-    assert cle_normale("premiere-seance-du-v-nettoye") == "premiere"
-    assert cle_normale("AN_Rappo-0032") == "an_rappo"
-    assert cle_normale("AN_Rapport") == "an_rappo"
-    assert cle_normale("Ecalle_o-0040") == "ecalle_o"
-    assert cle_normale("Ecalle_ouvrage") == "ecalle_o"
+    """Les trois couples d'Examples/Extension coincident au
+    palier 8 (D3, valide sur le corpus fourni par
+    l'utilisateur ; feature 007 : cles completes, troncature
+    par paliers dans apparie_niveau)."""
+    assert cle_normale("premiere-0034") == "premiere0034"
+    assert cle_normale("premiere-seance-du-v-nettoye") == ("premiereseanceduvnettoye")
+    assert cle_normale("AN_Rappo-0032") == "an_rappo0032"
+    assert cle_normale("AN_Rapport") == "an_rapport"
+    assert cle_normale("Ecalle_o-0040") == "ecalle_o0040"
+    assert cle_normale("Ecalle_ouvrage") == "ecalle_ouvrage"
 
 
 def test_cle_normale_accents_et_espaces():
     """Le .md peut porter accents et espaces que le .json convertit
     en _ ou simplifie (clarification du 2026-10-14)."""
-    assert cle_normale("Mécomptes publics") == "mecompte"
-    assert cle_normale("Rapport d'information") == "rapport_"
+    assert cle_normale("Mécomptes publics") == "mecomptes_publics"
+    assert cle_normale("Rapport d'information") == "rapport_dinformation"
     assert cle_normale("") == ""
 
 
@@ -144,24 +146,75 @@ def test_melee_appariement_unique_par_prefixe(tmp_path):
 
 
 def test_melee_ambiguite_deux_json_meme_prefixe(tmp_path):
+    """FR-010 (feature 007) : deux .json homonymes a 8 caracteres
+    mais de cles completes differentes -> le .md reste classique
+    silencieux, les deux .json deviennent orphelins."""
     md = _ecrire_md(tmp_path, "premiere-seance.md")
-    _ecrire_contexte(tmp_path, "premiere-0034.json")
-    _ecrire_contexte(tmp_path, "premiere-0035.json")
+    js_a = _ecrire_contexte(tmp_path, "premiere-0034.json")
+    js_b = _ecrire_contexte(tmp_path, "premiere-0035.json")
     jsons = sorted(tmp_path.glob("premiere-003*.json"))
     contextes, avertissements = apparie_niveau([md], jsons)
     assert contextes == {}
-    assert avertissements == [f"Appariement ambigu pour {md}"]
+    assert avertissements == [
+        f".json de contexte orphelin : {js_a}",
+        f".json de contexte orphelin : {js_b}",
+    ]
 
 
 def test_melee_ambiguite_json_partage_par_deux_md(tmp_path):
+    """FR-010 (feature 007) : deux .md homonymes a 8 caracteres
+    mais de cles completes differentes -> aucun appariement, le
+    .json devient orphelin, pas d'ambiguite (cles completes
+    differentes)."""
     md_1 = _ecrire_md(tmp_path, "an_rappo-1.md")
     md_2 = _ecrire_md(tmp_path, "an_rappo-2.md")
     js = _ecrire_contexte(tmp_path, "an_rappo-0032.json")
     contextes, avertissements = apparie_niveau([md_1, md_2], [js])
     assert contextes == {}
+    assert avertissements == [f".json de contexte orphelin : {js}"]
+
+
+def test_melee_prefixe_long_resolution_par_paliers(tmp_path):
+    """US-1, SC-001 (feature 007) : cas Fipeco, 3 paires
+    partageant fipeco.fr-00003, ambigues aux paliers 8 et 12,
+    appariees au palier 16, aucun avertissement."""
+    mds: list[Path] = []
+    jsons: list[Path] = []
+    for numero, suffixe in (("33", "0063"), ("34", "0055"), ("35", "0050")):
+        mds.append(_ecrire_md(tmp_path, f"fipeco.fr-0000{numero}-nettoye.md"))
+        jsons.append(
+            _ecrire_contexte(tmp_path, f"fipeco.fr-0000{numero}-net-{suffixe}.json")
+        )
+    contextes, avertissements = apparie_niveau(mds, jsons)
+    assert contextes == {md: CONTEXTE_VALIDE for md in mds}
+    assert avertissements == []
+
+
+def test_melee_ambiguite_vraie_cle_complete_identique(tmp_path):
+    """US-3, FR-005, FR-009 (feature 007) : deux .md de meme cle
+    normalisee complete (doc 1 et doc_1 -> doc_1) -> ambiguite a
+    la longueur maximale pour chacun, .json non orphelin."""
+    md_1 = _ecrire_md(tmp_path, "doc 1.md")
+    md_2 = _ecrire_md(tmp_path, "doc_1.md")
+    js = _ecrire_contexte(tmp_path, "doc 1.json")
+    contextes, avertissements = apparie_niveau([md_1, md_2], [js])
+    assert contextes == {}
     assert sorted(avertissements) == sorted(
         [f"Appariement ambigu pour {md_1}", f"Appariement ambigu pour {md_2}"]
     )
+
+
+def test_melee_prefixe_partage_cles_differentes_apparies(tmp_path):
+    """US-3, FR-009, SC-003 (feature 007) : deux paires ambigues
+    a 8 caracteres mais de cles completes differentes -> chacune
+    appariee correctement, aucun faux positif."""
+    md_a = _ecrire_md(tmp_path, "rapport-2024-final.md")
+    md_b = _ecrire_md(tmp_path, "rapport-2024-final-old.md")
+    js_a = _ecrire_contexte(tmp_path, "rapport-2024-final.json")
+    js_b = _ecrire_contexte(tmp_path, "rapport-2024-final-old.json")
+    contextes, avertissements = apparie_niveau([md_a, md_b], [js_a, js_b])
+    assert contextes == {md_a: CONTEXTE_VALIDE, md_b: CONTEXTE_VALIDE}
+    assert avertissements == []
 
 
 def test_melee_json_invalide_apparie_avertit(tmp_path):
