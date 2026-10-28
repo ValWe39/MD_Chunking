@@ -37,12 +37,19 @@ jamais dans le niveau parent) :
    validation du format attendu (les sept clés exactes — voir
    contrat chunk-json.md). Les autres fichiers du niveau sont
    ignorés.
-2. **Niveau mélangé** — plusieurs `.md` ou plusieurs `.json` : un
-   `.md` est apparié à un `.json` si les 8 premiers caractères de
-   leurs noms, après normalisation (accents supprimés, minuscules,
-   espaces convertis en `_`, seuls `a-z 0-9 _` conservés),
-   coïncident, et si cette correspondance est unique des deux
-   côtés.
+2. **Niveau mélangé** — plusieurs `.md` ou plusieurs `.json` :
+   appariement par **extension progressive par paliers**
+   (amendement feature 007) : à chaque palier (8, 12, 16, …
+   jusqu'à la longueur maximale des clés normalisées du
+   niveau), chaque `.md` non résolu est apparié à un `.json` si
+   leurs noms, après normalisation (accents supprimés,
+   minuscules, espaces convertis en `_`, seuls `a-z 0-9 _`
+   conservés), tronqués à ce palier coïncident, et si cette
+   correspondance est unique des deux côtés ; chaque `.md`
+   avance indépendamment jusqu'à résolution ou longueur
+   maximale ; à la longueur maximale, un `.md` avec plusieurs
+   candidats ou des concurrents émet « Appariement ambigu
+   pour {md} » (un `.md` sans candidat reste silencieux).
 3. **Descente** — chaque sous-dossier est parcouru de la même
    façon (profondeur d'abord), même si le niveau courant est vide
    de `.md`.
